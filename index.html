@@ -1,0 +1,781 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f6f8">
+<title>Anotar Pedidos</title>
+
+<style>
+:root{
+  --bg:#f4f6f8;
+  --panel:#ffffff;
+  --gold:#d5a400;
+  --gold2:#f4c430;
+  --line:#e4e7eb;
+  --text:#20242a;
+  --muted:#777e87;
+}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:linear-gradient(180deg,#fff,#f0f2f5);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--text);
+  padding:16px;
+  max-width:900px;
+  margin:auto;
+}
+
+.header{
+  text-align:center;
+  padding:16px 0 22px;
+}
+
+.logo{
+  font-size:clamp(34px,9vw,54px);
+  font-weight:900;
+  line-height:.95;
+  letter-spacing:-2px;
+}
+
+.logo span{color:var(--gold)}
+
+.sub{
+  color:var(--muted);
+  margin-top:8px;
+}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 5px 20px #00000008;
+}
+
+.panel h2{
+  font-size:20px;
+  margin:0 0 16px;
+}
+
+.toolbar{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.toolbar input,.toolbar select{
+  flex:1;
+  min-width:130px;
+  background:#fff;
+  color:#222;
+  border:1px solid #ccc;
+  border-radius:12px;
+  padding:12px;
+  font-size:15px;
+}
+
+.order{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 0;
+  border-top:1px solid #eee;
+  flex-wrap:wrap;
+}
+
+.supplier{
+  font-weight:700;
+  flex:1;
+  min-width:125px;
+  overflow-wrap:anywhere;
+}
+
+.day{
+  color:#b18a00;
+  min-width:100px;
+  font-weight:600;
+}
+
+.amount{
+  font-weight:800;
+  color:#9a7600;
+  border:1px solid #d6ad20;
+  border-radius:30px;
+  padding:7px 12px;
+  white-space:nowrap;
+  background:#fffdf5;
+}
+
+.actions{
+  display:flex;
+  gap:7px;
+}
+
+.edit,.del{
+  border:0;
+  border-radius:10px;
+  padding:9px 12px;
+  color:white;
+  cursor:pointer;
+  font-size:15px;
+}
+
+.edit{background:#0879dc}
+.del{background:#d32f2f}
+
+.empty{
+  text-align:center;
+  color:#999;
+  padding:28px 15px;
+}
+
+.totalbox{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  font-size:18px;
+  font-weight:800;
+}
+
+.total{
+  background:linear-gradient(100deg,#f5cf44,#e4ae00);
+  color:#222;
+  padding:12px 18px;
+  border-radius:30px;
+  white-space:nowrap;
+  font-size:23px;
+}
+
+.small{
+  color:#999;
+  font-size:13px;
+  text-align:center;
+  margin-top:12px;
+}
+
+.status{
+  text-align:center;
+  padding:10px;
+  margin-bottom:12px;
+  font-size:13px;
+  border-radius:12px;
+  display:none;
+}
+.status.show{display:block}
+.status.error{background:#fff0f0;color:#b42323}
+.status.success{background:#eefaf0;color:#217a35}
+.status.info{background:#eef5ff;color:#2162aa}
+
+/* BOTÓN FLOTANTE */
+
+.fab{
+  position:fixed;
+  right:22px;
+  bottom:24px;
+  width:64px;
+  height:64px;
+  border:none;
+  border-radius:50%;
+  background:linear-gradient(135deg,#f5cf44,#e4ae00);
+  color:#222;
+  font-size:36px;
+  font-weight:400;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 6px 22px #c69a0055;
+  z-index:100;
+  transition:.2s;
+}
+
+.fab:active{transform:scale(.93)}
+.fab:disabled{opacity:.5;cursor:wait}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:#00000055;
+  backdrop-filter:blur(4px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+  z-index:200;
+}
+
+.modal.active{display:flex}
+
+.modal-box{
+  width:100%;
+  max-width:450px;
+  background:#fff;
+  border-radius:24px;
+  padding:22px;
+  box-shadow:0 15px 50px #00000025;
+  animation:appear .2s ease;
+}
+
+@keyframes appear{
+  from{transform:translateY(20px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.modal-header h2{
+  margin:0;
+  font-size:21px;
+}
+
+.close{
+  border:none;
+  background:#f0f1f3;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.field{margin:13px 0}
+
+.field label{
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+.field input,.field select{
+  width:100%;
+  background:#fff;
+  border:1.5px solid #d8b52b;
+  border-radius:13px;
+  color:#222;
+  padding:14px;
+  font-size:16px;
+  outline:none;
+}
+
+.field input:focus,.field select:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px #ffd21f22;
+}
+
+.btn{
+  border:0;
+  border-radius:14px;
+  padding:14px 16px;
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.primary{
+  background:linear-gradient(100deg,#f5cf44,#e4ae00);
+  color:#222;
+  width:100%;
+  margin-top:8px;
+}
+
+.primary:disabled{opacity:.6;cursor:wait}
+
+.secondary{
+  background:#f0f1f3;
+  color:#333;
+  border:1px solid #ddd;
+}
+
+.day-badge{
+  background:#fff9df;
+  border:1px solid #ecd36a;
+  color:#9b7700;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:800;
+}
+
+@media(max-width:520px){
+  body{padding:12px}
+  .panel{padding:15px}
+  .order{gap:8px}
+  .supplier{flex-basis:100%}
+  .day{flex:1}
+  .totalbox{font-size:16px}
+  .total{font-size:20px;padding:10px 13px}
+  .fab{
+    right:18px;
+    bottom:20px;
+    width:60px;
+    height:60px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="logo">Anotar <span>Pedidos</span></div>
+  <div class="sub">Organiza tus pedidos por proveedor y día</div>
+</header>
+
+<section class="panel">
+  <h2>📋 Mis pedidos</h2>
+
+  <div id="status" class="status"></div>
+
+  <div class="toolbar">
+    <input id="search" placeholder="🔍 Buscar proveedor…">
+    <select id="filterDay"></select>
+  </div>
+
+  <div id="orders">
+    <div class="empty">Conectando con la base de datos...</div>
+  </div>
+</section>
+
+<section class="panel totalbox">
+  <span>📊 Total general</span>
+  <span class="total" id="grandTotal">RD$ 0.00</span>
+</section>
+
+<div class="small">
+  ☁️ Tus pedidos se guardan en la nube con Supabase.
+</div>
+
+<button class="fab" id="openModal" aria-label="Agregar pedido">+</button>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h2 id="modalTitle">➕ Registrar pedido</h2>
+      <button class="close" id="closeModal" type="button">✕</button>
+    </div>
+
+    <form id="orderForm">
+      <input type="hidden" id="editId">
+
+      <div class="field">
+        <label for="supplier">Proveedor</label>
+        <input id="supplier"
+          placeholder="Nombre del proveedor"
+          required maxlength="100">
+      </div>
+
+      <div class="field">
+        <label for="day">Día de semana</label>
+        <select id="day" required></select>
+      </div>
+
+      <div class="field">
+        <label for="amount">Total del pedido (RD$)</label>
+        <input id="amount"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          required>
+      </div>
+
+      <button class="btn primary" id="saveBtn" type="submit">
+        Guardar pedido
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* =========================================
+   CONFIGURACIÓN DE SUPABASE
+   COLOCA AQUÍ TUS DATOS
+========================================= */
+
+const SUPABASE_URL = 'https://igvjtymodcijosjjeyqh.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ilARQhS4BpVAo76F8axvhg_jTZAonlh';
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* =========================================
+   ELEMENTOS
+========================================= */
+
+const form = document.getElementById('orderForm');
+const supplier = document.getElementById('supplier');
+const day = document.getElementById('day');
+const amount = document.getElementById('amount');
+const editId = document.getElementById('editId');
+const ordersEl = document.getElementById('orders');
+const search = document.getElementById('search');
+const filterDay = document.getElementById('filterDay');
+const saveBtn = document.getElementById('saveBtn');
+const modal = document.getElementById('modal');
+const openModalBtn = document.getElementById('openModal');
+const closeModalBtn = document.getElementById('closeModal');
+const modalTitle = document.getElementById('modalTitle');
+const statusEl = document.getElementById('status');
+
+const allDays = [
+  'Lunes','Martes','Miércoles',
+  'Jueves','Viernes','Sábado','Domingo'
+];
+
+let orders = [];
+let loading = false;
+
+/* =========================================
+   MENSAJES
+========================================= */
+
+function showStatus(message,type='info'){
+  statusEl.textContent = message;
+  statusEl.className = 'status show ' + type;
+
+  if(type === 'success'){
+    setTimeout(()=>{
+      statusEl.className = 'status';
+    },3500);
+  }
+}
+
+/* =========================================
+   DÍAS
+========================================= */
+
+function getCurrentDayIndex(){
+  const today = new Date().getDay();
+  return today === 0 ? 6 : today - 1;
+}
+
+function getRemainingDays(){
+  return allDays.slice(getCurrentDayIndex());
+}
+
+function setupDays(selectedDay=''){
+  const remaining = getRemainingDays();
+
+  day.innerHTML =
+    '<option value="">Selecciona un día</option>' +
+    remaining.map(d=>`<option value="${d}">${d}</option>`).join('');
+
+  if(selectedDay && !remaining.includes(selectedDay)){
+    day.add(new Option(selectedDay,selectedDay));
+  }
+
+  if(selectedDay){
+    day.value = selectedDay;
+  }
+
+  filterDay.innerHTML =
+    '<option value="">Todos los días</option>' +
+    allDays.map(d=>`<option value="${d}">${d}</option>`).join('');
+}
+
+/* =========================================
+   FORMATO
+========================================= */
+
+const money = n => new Intl.NumberFormat('es-DO',{
+  style:'currency',
+  currency:'DOP',
+  maximumFractionDigits:2
+}).format(Number(n || 0));
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[c]));
+}
+
+/* =========================================
+   CARGAR PEDIDOS DESDE SUPABASE
+========================================= */
+
+async function loadOrders(){
+
+  loading = true;
+  ordersEl.innerHTML =
+    '<div class="empty">☁️ Cargando pedidos...</div>';
+
+  const {data,error} = await supabaseClient
+    .from('pedidos')
+    .select('*')
+    .order('created_at',{ascending:false});
+
+  loading = false;
+
+  if(error){
+    console.error(error);
+    ordersEl.innerHTML =
+      '<div class="empty">No se pudieron cargar los pedidos.</div>';
+    showStatus('Error conectando con Supabase: '+error.message,'error');
+    return;
+  }
+
+  orders = data || [];
+  render();
+}
+
+/* =========================================
+   MOSTRAR PEDIDOS
+========================================= */
+
+function render(){
+
+  const q = search.value.trim().toLowerCase();
+  const d = filterDay.value;
+
+  const filtered = orders.filter(o =>
+    String(o.proveedor || '').toLowerCase().includes(q) &&
+    (!d || o.dia === d)
+  );
+
+  ordersEl.innerHTML = filtered.length
+    ? filtered.map(o=>`
+      <div class="order">
+
+        <div class="supplier">
+          👥 ${escapeHtml(o.proveedor)}
+        </div>
+
+        <div class="day">
+          ▦ ${escapeHtml(o.dia)}
+        </div>
+
+        <div class="amount">
+          ${money(o.monto)}
+        </div>
+
+        <div class="actions">
+          <button class="edit"
+            data-edit="${o.id}"
+            aria-label="Editar">✎</button>
+
+          <button class="del"
+            data-del="${o.id}"
+            aria-label="Eliminar">🗑</button>
+        </div>
+
+      </div>
+    `).join('')
+    :`
+      <div class="empty">
+        ${orders.length
+          ?'No hay pedidos que coincidan.'
+          :'Todavía no tienes pedidos guardados. Pulsa el botón + para agregar tu primer pedido.'}
+      </div>
+    `;
+
+  const total = orders.reduce(
+    (s,o)=>s+Number(o.monto || 0),0
+  );
+
+  document.getElementById('grandTotal').textContent = money(total);
+}
+
+/* =========================================
+   MODAL
+========================================= */
+
+function openModal(){
+  form.reset();
+  editId.value = '';
+  modalTitle.textContent = '➕ Registrar pedido';
+  saveBtn.textContent = 'Guardar pedido';
+  setupDays();
+  modal.classList.add('active');
+
+  setTimeout(()=>supplier.focus(),100);
+}
+
+function closeModal(){
+  modal.classList.remove('active');
+}
+
+openModalBtn.addEventListener('click',openModal);
+closeModalBtn.addEventListener('click',closeModal);
+
+modal.addEventListener('click',e=>{
+  if(e.target === modal) closeModal();
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.key === 'Escape') closeModal();
+});
+
+/* =========================================
+   GUARDAR EN SUPABASE
+========================================= */
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  if(loading)return;
+
+  const proveedor = supplier.value.trim();
+  const diaSeleccionado = day.value;
+  const monto = Number(amount.value);
+
+  if(!proveedor || !diaSeleccionado || !Number.isFinite(monto) || monto < 0){
+    showStatus('Verifica los datos del pedido.','error');
+    return;
+  }
+
+  loading = true;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Guardando...';
+
+  const entry = {
+    proveedor,
+    dia:diaSeleccionado,
+    monto
+  };
+
+  let result;
+
+  if(editId.value){
+
+    result = await supabaseClient
+      .from('pedidos')
+      .update(entry)
+      .eq('id',editId.value);
+
+  }else{
+
+    result = await supabaseClient
+      .from('pedidos')
+      .insert([entry]);
+  }
+
+  loading = false;
+  saveBtn.disabled = false;
+  saveBtn.textContent = editId.value
+    ? 'Actualizar pedido'
+    : 'Guardar pedido';
+
+  if(result.error){
+    console.error(result.error);
+    showStatus('No se pudo guardar: '+result.error.message,'error');
+    return;
+  }
+
+  closeModal();
+  await loadOrders();
+
+  showStatus(
+    editId.value
+      ? 'Pedido actualizado correctamente ☁️'
+      : 'Pedido guardado correctamente ☁️',
+    'success'
+  );
+
+  form.reset();
+  editId.value = '';
+  saveBtn.textContent = 'Guardar pedido';
+});
+
+/* =========================================
+   EDITAR Y ELIMINAR
+========================================= */
+
+ordersEl.addEventListener('click',async e=>{
+
+  const editButton = e.target.closest('[data-edit]');
+  const deleteButton = e.target.closest('[data-del]');
+
+  /* EDITAR */
+
+  if(editButton){
+
+    const id = editButton.dataset.edit;
+    const o = orders.find(x=>String(x.id) === String(id));
+
+    if(!o)return;
+
+    openModal();
+
+    supplier.value = o.proveedor;
+    setupDays(o.dia);
+    day.value = o.dia;
+    amount.value = o.monto;
+    editId.value = o.id;
+
+    modalTitle.textContent = '✏️ Editar pedido';
+    saveBtn.textContent = 'Actualizar pedido';
+
+    return;
+  }
+
+  /* ELIMINAR */
+
+  if(deleteButton){
+
+    const id = deleteButton.dataset.del;
+
+    if(!confirm('¿Eliminar este pedido permanentemente?'))return;
+
+    deleteButton.disabled = true;
+
+    const {error} = await supabaseClient
+      .from('pedidos')
+      .delete()
+      .eq('id',id);
+
+    if(error){
+      console.error(error);
+      showStatus('No se pudo eliminar: '+error.message,'error');
+      deleteButton.disabled = false;
+      return;
+    }
+
+    await loadOrders();
+    showStatus('Pedido eliminado correctamente.','success');
+  }
+});
+
+/* =========================================
+   BUSCAR Y FILTRAR
+========================================= */
+
+search.addEventListener('input',render);
+filterDay.addEventListener('change',render);
+
+/* =========================================
+   INICIAR APLICACIÓN
+========================================= */
+
+setupDays();
+loadOrders();
+</script>
+
+</body>
+</html>
+
+
