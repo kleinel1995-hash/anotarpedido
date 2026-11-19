@@ -551,7 +551,6 @@ async function loadOrders(showLoading=false){
     .select('*')
     .order('created_at',{ascending:false});
 
-  // Evita que una respuesta antigua reemplace datos nuevos.
   if(currentRequest !== requestNumber)return;
 
   if(error){
@@ -602,7 +601,6 @@ function subscribeToOrders(){
 
         console.log('Cambio detectado:',payload);
 
-        // Agrupa cambios rápidos para evitar muchas consultas.
         clearTimeout(refreshTimer);
 
         refreshTimer = setTimeout(async ()=>{
@@ -649,7 +647,6 @@ function subscribeToOrders(){
 
         console.log('Conectado a actualizaciones en tiempo real.');
 
-        // Sincroniza al establecer la conexión.
         loadOrders();
 
       }
@@ -659,10 +656,7 @@ function subscribeToOrders(){
 
         console.error('Problema con Realtime:',error);
 
-        showStatus(
-          'Conexión en tiempo real interrumpida. Intentando reconectar...',
-          'error'
-        );
+        // Se mantiene la reconexión sin mostrar el mensaje en pantalla.
 
       }
 
@@ -740,7 +734,6 @@ function render(){
 
     `;
 
-  // El total incluye todos los pedidos, no solamente los filtrados.
   const total = orders.reduce(
     (s,o)=>s+Number(o.monto || 0),0
   );
@@ -922,8 +915,6 @@ ordersEl.addEventListener('click',async e=>{
 
   const deleteButton = e.target.closest('[data-del]');
 
-  /* EDITAR */
-
   if(editButton){
 
     const id = editButton.dataset.edit;
@@ -953,8 +944,6 @@ ordersEl.addEventListener('click',async e=>{
     return;
 
   }
-
-  /* ELIMINAR */
 
   if(deleteButton){
 
