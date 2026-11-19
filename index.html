@@ -402,16 +402,18 @@ body{
   </div>
 </div>
 
-<!-- Supabase JS -->
+<!-- SUPABASE -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
 /* =========================================
    CONFIGURACIÓN DE SUPABASE
-   COLOCA AQUÍ TUS DATOS
 ========================================= */
 
 const SUPABASE_URL = 'https://igvjtymodcijosjjeyqh.supabase.co';
+
 const SUPABASE_KEY = 'sb_publishable_ilARQhS4BpVAo76F8axvhg_jTZAonlh';
 
 const supabaseClient = window.supabase.createClient(
@@ -444,20 +446,26 @@ const allDays = [
 ];
 
 let orders = [];
-let loading = false;
+let saving = false;
+let requestNumber = 0;
+let realtimeChannel = null;
+let refreshTimer = null;
 
 /* =========================================
    MENSAJES
 ========================================= */
 
 function showStatus(message,type='info'){
+
   statusEl.textContent = message;
   statusEl.className = 'status show ' + type;
 
   if(type === 'success'){
+
     setTimeout(()=>{
       statusEl.className = 'status';
     },3500);
+
   }
 }
 
@@ -466,15 +474,21 @@ function showStatus(message,type='info'){
 ========================================= */
 
 function getCurrentDayIndex(){
+
   const today = new Date().getDay();
+
   return today === 0 ? 6 : today - 1;
+
 }
 
 function getRemainingDays(){
+
   return allDays.slice(getCurrentDayIndex());
+
 }
 
 function setupDays(selectedDay=''){
+
   const remaining = getRemainingDays();
 
   day.innerHTML =
@@ -492,6 +506,7 @@ function setupDays(selectedDay=''){
   filterDay.innerHTML =
     '<option value="">Todos los días</option>' +
     allDays.map(d=>`<option value="${d}">${d}</option>`).join('');
+
 }
 
 /* =========================================
@@ -505,6 +520,7 @@ const money = n => new Intl.NumberFormat('es-DO',{
 }).format(Number(n || 0));
 
 function escapeHtml(s){
+
   return String(s).replace(/[&<>"']/g,c=>({
     '&':'&amp;',
     '<':'&lt;',
@@ -512,35 +528,152 @@ function escapeHtml(s){
     '"':'&quot;',
     "'":'&#39;'
   }[c]));
+
 }
 
 /* =========================================
    CARGAR PEDIDOS DESDE SUPABASE
 ========================================= */
 
-async function loadOrders(){
+async function loadOrders(showLoading=false){
 
-  loading = true;
-  ordersEl.innerHTML =
-    '<div class="empty">☁️ Cargando pedidos...</div>';
+  const currentRequest = ++requestNumber;
+
+  if(showLoading){
+
+    ordersEl.innerHTML =
+      '<div class="empty">☁️ Cargando pedidos...</div>';
+
+  }
 
   const {data,error} = await supabaseClient
     .from('pedidos')
     .select('*')
     .order('created_at',{ascending:false});
 
-  loading = false;
+  // Evita que una respuesta antigua reemplace datos nuevos.
+  if(currentRequest !== requestNumber)return;
 
   if(error){
+
     console.error(error);
-    ordersEl.innerHTML =
-      '<div class="empty">No se pudieron cargar los pedidos.</div>';
-    showStatus('Error conectando con Supabase: '+error.message,'error');
+
+    if(orders.length === 0){
+
+      ordersEl.innerHTML =
+        '<div class="empty">No se pudieron cargar los pedidos.</div>';
+
+    }
+
+    showStatus(
+      'Error conectando con Supabase: '+error.message,
+      'error'
+    );
+
     return;
+
   }
 
   orders = data || [];
+
   render();
+
+}
+
+/* =========================================
+   ACTUALIZACIÓN EN TIEMPO REAL
+========================================= */
+
+function subscribeToOrders(){
+
+  if(realtimeChannel)return;
+
+  realtimeChannel = supabaseClient
+    .channel('pedidos-en-tiempo-real')
+
+    .on(
+      'postgres_changes',
+      {
+        event:'*',
+        schema:'public',
+        table:'pedidos'
+      },
+      (payload)=>{
+
+        console.log('Cambio detectado:',payload);
+
+        // Agrupa cambios rápidos para evitar muchas consultas.
+        clearTimeout(refreshTimer);
+
+        refreshTimer = setTimeout(async ()=>{
+
+          await loadOrders();
+
+          if(payload.eventType === 'INSERT'){
+
+            showStatus(
+              'Nuevo pedido recibido automáticamente ☁️',
+              'success'
+            );
+
+          }
+
+          if(payload.eventType === 'UPDATE'){
+
+            showStatus(
+              'Pedido actualizado automáticamente ☁️',
+              'success'
+            );
+
+          }
+
+          if(payload.eventType === 'DELETE'){
+
+            showStatus(
+              'Pedido eliminado automáticamente ☁️',
+              'success'
+            );
+
+          }
+
+        },250);
+
+      }
+    )
+
+    .subscribe((status,error)=>{
+
+      console.log('Estado Realtime:',status);
+
+      if(status === 'SUBSCRIBED'){
+
+        console.log('Conectado a actualizaciones en tiempo real.');
+
+        // Sincroniza al establecer la conexión.
+        loadOrders();
+
+      }
+
+      if(status === 'CHANNEL_ERROR' ||
+         status === 'TIMED_OUT'){
+
+        console.error('Problema con Realtime:',error);
+
+        showStatus(
+          'Conexión en tiempo real interrumpida. Intentando reconectar...',
+          'error'
+        );
+
+      }
+
+      if(status === 'CLOSED'){
+
+        console.log('Canal Realtime cerrado.');
+
+      }
+
+    });
+
 }
 
 /* =========================================
@@ -558,7 +691,9 @@ function render(){
   );
 
   ordersEl.innerHTML = filtered.length
+
     ? filtered.map(o=>`
+
       <div class="order">
 
         <div class="supplier">
@@ -574,6 +709,7 @@ function render(){
         </div>
 
         <div class="actions">
+
           <button class="edit"
             data-edit="${o.id}"
             aria-label="Editar">✎</button>
@@ -581,23 +717,37 @@ function render(){
           <button class="del"
             data-del="${o.id}"
             aria-label="Eliminar">🗑</button>
+
         </div>
 
       </div>
+
     `).join('')
+
     :`
+
       <div class="empty">
+
         ${orders.length
-          ?'No hay pedidos que coincidan.'
-          :'Todavía no tienes pedidos guardados. Pulsa el botón + para agregar tu primer pedido.'}
+
+          ? 'No hay pedidos que coincidan.'
+
+          : 'Todavía no tienes pedidos guardados. Pulsa el botón + para agregar tu primer pedido.'
+
+        }
+
       </div>
+
     `;
 
+  // El total incluye todos los pedidos, no solamente los filtrados.
   const total = orders.reduce(
     (s,o)=>s+Number(o.monto || 0),0
   );
 
-  document.getElementById('grandTotal').textContent = money(total);
+  document.getElementById('grandTotal').textContent =
+    money(total);
+
 }
 
 /* =========================================
@@ -605,52 +755,86 @@ function render(){
 ========================================= */
 
 function openModal(){
+
   form.reset();
+
   editId.value = '';
+
   modalTitle.textContent = '➕ Registrar pedido';
+
   saveBtn.textContent = 'Guardar pedido';
+
   setupDays();
+
   modal.classList.add('active');
 
   setTimeout(()=>supplier.focus(),100);
+
 }
 
 function closeModal(){
+
   modal.classList.remove('active');
+
 }
 
 openModalBtn.addEventListener('click',openModal);
+
 closeModalBtn.addEventListener('click',closeModal);
 
 modal.addEventListener('click',e=>{
-  if(e.target === modal) closeModal();
+
+  if(e.target === modal)closeModal();
+
 });
 
 document.addEventListener('keydown',e=>{
-  if(e.key === 'Escape') closeModal();
+
+  if(e.key === 'Escape')closeModal();
+
 });
 
 /* =========================================
-   GUARDAR EN SUPABASE
+   GUARDAR Y ACTUALIZAR PEDIDOS
 ========================================= */
 
 form.addEventListener('submit',async e=>{
+
   e.preventDefault();
 
-  if(loading)return;
+  if(saving)return;
 
   const proveedor = supplier.value.trim();
+
   const diaSeleccionado = day.value;
+
   const monto = Number(amount.value);
 
-  if(!proveedor || !diaSeleccionado || !Number.isFinite(monto) || monto < 0){
-    showStatus('Verifica los datos del pedido.','error');
+  if(
+    !proveedor ||
+    !diaSeleccionado ||
+    !Number.isFinite(monto) ||
+    monto < 0
+  ){
+
+    showStatus(
+      'Verifica los datos del pedido.',
+      'error'
+    );
+
     return;
+
   }
 
-  loading = true;
+  saving = true;
+
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Guardando...';
+
+  const isEditing = Boolean(editId.value);
+
+  saveBtn.textContent = isEditing
+    ? 'Actualizando...'
+    : 'Guardando...';
 
   const entry = {
     proveedor,
@@ -658,47 +842,74 @@ form.addEventListener('submit',async e=>{
     monto
   };
 
-  let result;
+  try{
 
-  if(editId.value){
+    let result;
 
-    result = await supabaseClient
-      .from('pedidos')
-      .update(entry)
-      .eq('id',editId.value);
+    if(isEditing){
 
-  }else{
+      result = await supabaseClient
+        .from('pedidos')
+        .update(entry)
+        .eq('id',editId.value);
 
-    result = await supabaseClient
-      .from('pedidos')
-      .insert([entry]);
+    }else{
+
+      result = await supabaseClient
+        .from('pedidos')
+        .insert([entry]);
+
+    }
+
+    if(result.error){
+
+      console.error(result.error);
+
+      showStatus(
+        'No se pudo guardar: '+result.error.message,
+        'error'
+      );
+
+      return;
+
+    }
+
+    closeModal();
+
+    await loadOrders();
+
+    showStatus(
+      isEditing
+        ? 'Pedido actualizado correctamente ☁️'
+        : 'Pedido guardado correctamente ☁️',
+      'success'
+    );
+
+    form.reset();
+
+    editId.value = '';
+
+  }catch(error){
+
+    console.error(error);
+
+    showStatus(
+      'Error de conexión. Inténtalo nuevamente.',
+      'error'
+    );
+
+  }finally{
+
+    saving = false;
+
+    saveBtn.disabled = false;
+
+    saveBtn.textContent = editId.value
+      ? 'Actualizar pedido'
+      : 'Guardar pedido';
+
   }
 
-  loading = false;
-  saveBtn.disabled = false;
-  saveBtn.textContent = editId.value
-    ? 'Actualizar pedido'
-    : 'Guardar pedido';
-
-  if(result.error){
-    console.error(result.error);
-    showStatus('No se pudo guardar: '+result.error.message,'error');
-    return;
-  }
-
-  closeModal();
-  await loadOrders();
-
-  showStatus(
-    editId.value
-      ? 'Pedido actualizado correctamente ☁️'
-      : 'Pedido guardado correctamente ☁️',
-    'success'
-  );
-
-  form.reset();
-  editId.value = '';
-  saveBtn.textContent = 'Guardar pedido';
 });
 
 /* =========================================
@@ -708,6 +919,7 @@ form.addEventListener('submit',async e=>{
 ordersEl.addEventListener('click',async e=>{
 
   const editButton = e.target.closest('[data-edit]');
+
   const deleteButton = e.target.closest('[data-del]');
 
   /* EDITAR */
@@ -715,22 +927,31 @@ ordersEl.addEventListener('click',async e=>{
   if(editButton){
 
     const id = editButton.dataset.edit;
-    const o = orders.find(x=>String(x.id) === String(id));
+
+    const o = orders.find(
+      x=>String(x.id) === String(id)
+    );
 
     if(!o)return;
 
     openModal();
 
     supplier.value = o.proveedor;
+
     setupDays(o.dia);
+
     day.value = o.dia;
+
     amount.value = o.monto;
+
     editId.value = o.id;
 
     modalTitle.textContent = '✏️ Editar pedido';
+
     saveBtn.textContent = 'Actualizar pedido';
 
     return;
+
   }
 
   /* ELIMINAR */
@@ -743,21 +964,50 @@ ordersEl.addEventListener('click',async e=>{
 
     deleteButton.disabled = true;
 
-    const {error} = await supabaseClient
-      .from('pedidos')
-      .delete()
-      .eq('id',id);
+    try{
 
-    if(error){
+      const {error} = await supabaseClient
+        .from('pedidos')
+        .delete()
+        .eq('id',id);
+
+      if(error){
+
+        console.error(error);
+
+        showStatus(
+          'No se pudo eliminar: '+error.message,
+          'error'
+        );
+
+        deleteButton.disabled = false;
+
+        return;
+
+      }
+
+      await loadOrders();
+
+      showStatus(
+        'Pedido eliminado correctamente.',
+        'success'
+      );
+
+    }catch(error){
+
       console.error(error);
-      showStatus('No se pudo eliminar: '+error.message,'error');
+
+      showStatus(
+        'Error de conexión al eliminar.',
+        'error'
+      );
+
       deleteButton.disabled = false;
-      return;
+
     }
 
-    await loadOrders();
-    showStatus('Pedido eliminado correctamente.','success');
   }
+
 });
 
 /* =========================================
@@ -765,17 +1015,51 @@ ordersEl.addEventListener('click',async e=>{
 ========================================= */
 
 search.addEventListener('input',render);
+
 filterDay.addEventListener('change',render);
+
+/* =========================================
+   SINCRONIZACIÓN AL VOLVER A LA PÁGINA
+========================================= */
+
+window.addEventListener('online',()=>{
+
+  showStatus(
+    'Conexión recuperada. Sincronizando pedidos...',
+    'info'
+  );
+
+  loadOrders();
+
+});
+
+window.addEventListener('focus',()=>{
+
+  loadOrders();
+
+});
+
+document.addEventListener('visibilitychange',()=>{
+
+  if(!document.hidden){
+
+    loadOrders();
+
+  }
+
+});
 
 /* =========================================
    INICIAR APLICACIÓN
 ========================================= */
 
 setupDays();
-loadOrders();
+
+loadOrders(true);
+
+subscribeToOrders();
+
 </script>
 
 </body>
 </html>
-
-
