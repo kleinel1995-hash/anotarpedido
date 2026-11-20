@@ -165,6 +165,7 @@ body{
 .status.success{background:#eefaf0;color:#217a35}
 .status.info{background:#eef5ff;color:#2162aa}
 
+/* PEDIDOS DE HOY: VERDE CLARO */
 .order.today{
   background:#e9f9ed;
   border:1px solid #a5dfb1;
@@ -180,6 +181,22 @@ body{
   background:#f4fff6;
 }
 
+/* PEDIDOS DE MAÑANA: AZUL CLARO */
+.order.tomorrow{
+  background:#e8f4ff;
+  border:1px solid #acd5f5;
+  border-radius:14px;
+  padding:14px;
+  margin:8px 0;
+}
+.order.tomorrow .supplier{color:#1764a0}
+.order.tomorrow .day{color:#1976c8;font-weight:900}
+.order.tomorrow .amount{
+  color:#1764a0;
+  border-color:#8fc5ed;
+  background:#f4faff;
+}
+
 .today-label{
   background:#19a34a;
   color:white;
@@ -189,22 +206,21 @@ body{
   font-weight:900;
 }
 .tomorrow-label{
-  background:#fff3cd;
-  color:#967000;
+  background:#cce8ff;
+  color:#125b96;
+  border:1px solid #a5d2f5;
   padding:5px 11px;
   border-radius:20px;
   font-size:12px;
   font-weight:900;
 }
 
-/* PEDIDOS RECIBIDOS: TRANSPARENTES */
-
+/* PEDIDOS RECIBIDOS */
 .received-section{
   margin-top:22px;
   padding-top:16px;
   border-top:2px dashed #e5e5e5;
 }
-
 .received-heading{
   display:flex;
   align-items:center;
@@ -215,7 +231,6 @@ body{
   font-weight:900;
   margin-bottom:10px;
 }
-
 .received-count{
   background:#e9f9ed;
   color:#16813b;
@@ -223,7 +238,6 @@ body{
   border-radius:20px;
   font-size:12px;
 }
-
 .order.received-order{
   background:transparent;
   border:1px solid transparent;
@@ -233,21 +247,13 @@ body{
   margin:5px 0;
   opacity:.68;
 }
-
-.order.received-order .supplier{
-  color:#68736b;
-}
-
-.order.received-order .day{
-  color:#929a93;
-}
-
+.order.received-order .supplier{color:#68736b}
+.order.received-order .day{color:#929a93}
 .order.received-order .amount{
   background:transparent;
   border:1px solid #cfd8d1;
   color:#6b8872;
 }
-
 .received-label{
   background:#e6f5e9;
   color:#16813b;
@@ -258,7 +264,6 @@ body{
   font-weight:900;
   white-space:nowrap;
 }
-
 .received-info{
   font-size:12px;
   color:#999;
@@ -391,7 +396,6 @@ body{
 
 <section class="panel">
   <h2>📋 Mis pedidos pendientes</h2>
-
   <div id="status" class="status"></div>
 
   <div class="toolbar">
@@ -405,10 +409,7 @@ body{
     <div class="empty">Conectando con la base de datos...</div>
   </div>
 
-  <!-- SECCIÓN SEPARADA DE RECIBIDOS -->
-
   <div class="received-section">
-
     <div class="received-heading">
       <span>✓ Pedidos recibidos</span>
       <span class="received-count" id="receivedCount">0</span>
@@ -422,7 +423,6 @@ body{
     <div id="receivedOrders">
       <div class="empty">Todavía no hay pedidos recibidos.</div>
     </div>
-
   </div>
 </section>
 
@@ -439,7 +439,6 @@ body{
 
 <div class="modal" id="modal">
   <div class="modal-box">
-
     <div class="modal-header">
       <h2 id="modalTitle">➕ Registrar pedido</h2>
       <button class="close" id="closeModal" type="button">✕</button>
@@ -450,8 +449,7 @@ body{
 
       <div class="field">
         <label for="supplier">Proveedor</label>
-        <input id="supplier"
-          placeholder="Nombre del proveedor"
+        <input id="supplier" placeholder="Nombre del proveedor"
           required maxlength="100">
       </div>
 
@@ -465,31 +463,21 @@ body{
 
       <div class="field">
         <label for="amount">Total del pedido (RD$)</label>
-        <input id="amount"
-          type="number"
-          inputmode="decimal"
-          min="0"
-          step="0.01"
-          placeholder="0.00"
-          required>
+        <input id="amount" type="number" inputmode="decimal"
+          min="0" step="0.01" placeholder="0.00" required>
       </div>
 
       <button class="btn primary" id="saveBtn" type="submit">
         Guardar pedido
       </button>
     </form>
-
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
-/* =====================================
-   CONFIGURACIÓN SUPABASE
-===================================== */
-
+/* CONFIGURACIÓN SUPABASE */
 const SUPABASE_URL =
 'https://igvjtymodcijosjjeyqh.supabase.co';
 
@@ -501,10 +489,7 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-/* =====================================
-   ELEMENTOS
-===================================== */
-
+/* ELEMENTOS */
 const form = document.getElementById('orderForm');
 const supplier = document.getElementById('supplier');
 const day = document.getElementById('day');
@@ -522,13 +507,8 @@ const modalTitle = document.getElementById('modalTitle');
 const statusEl = document.getElementById('status');
 
 const allDays = [
-  'Domingo',
-  'Lunes',
-  'Martes',
-  'Miércoles',
-  'Jueves',
-  'Viernes',
-  'Sábado'
+  'Domingo','Lunes','Martes','Miércoles',
+  'Jueves','Viernes','Sábado'
 ];
 
 let orders = [];
@@ -539,10 +519,7 @@ let refreshTimer = null;
 let statusTimer = null;
 let midnightTimer = null;
 
-/* =====================================
-   FECHAS LOCALES
-===================================== */
-
+/* FECHAS LOCALES */
 function localDateKey(date){
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,'0');
@@ -552,35 +529,22 @@ function localDateKey(date){
 
 function parseLocalDate(value){
   if(!value)return null;
-
   const parts = String(value).slice(0,10).split('-').map(Number);
-
-  if(parts.length !== 3 || parts.some(Number.isNaN)){
-    return null;
-  }
-
+  if(parts.length !== 3 || parts.some(Number.isNaN))return null;
   return new Date(parts[0],parts[1]-1,parts[2]);
 }
 
 function addDays(date,amount){
   const result = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
+    date.getFullYear(),date.getMonth(),date.getDate()
   );
-
   result.setDate(result.getDate()+amount);
   return result;
 }
 
 function getToday(){
   const now = new Date();
-
-  return new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
-  );
+  return new Date(now.getFullYear(),now.getMonth(),now.getDate());
 }
 
 function getDateDayName(date){
@@ -589,78 +553,54 @@ function getDateDayName(date){
 
 function formatDate(date){
   return new Intl.DateTimeFormat('es-DO',{
-    day:'2-digit',
-    month:'short'
+    day:'2-digit',month:'short'
   }).format(date);
 }
 
 function formatLongDate(date){
   return new Intl.DateTimeFormat('es-DO',{
-    weekday:'long',
-    day:'numeric',
-    month:'long'
+    weekday:'long',day:'numeric',month:'long'
   }).format(date);
 }
 
-/* =====================================
-   CALENDARIO SEMANAL
-===================================== */
-
+/* CALENDARIO */
 function getCalendarDates(){
-
   const today = getToday();
-
   const daysUntilSunday = (7-today.getDay())%7;
-
   const totalDays = daysUntilSunday+7;
-
   const dates = [];
 
   for(let i=0;i<=totalDays;i++){
     dates.push(addDays(today,i));
   }
-
   return dates;
 }
 
 function getWeekGroup(date){
-
   const today = getToday();
-
-  const firstSunday = addDays(
-    today,
-    (7-today.getDay())%7
-  );
-
-  return date <= firstSunday
-    ? 'ESTA SEMANA'
-    : 'PRÓXIMA SEMANA';
+  const firstSunday = addDays(today,(7-today.getDay())%7);
+  return date <= firstSunday ? 'ESTA SEMANA' : 'PRÓXIMA SEMANA';
 }
 
 function setupDays(selectedDate=''){
-
   const dates = getCalendarDates();
 
   day.innerHTML =
     '<option value="">Selecciona una fecha</option>';
-
   filterDay.innerHTML =
     '<option value="">Todos los días</option>';
 
   let currentGroup = '';
 
   dates.forEach(date=>{
-
     const key = localDateKey(date);
     const group = getWeekGroup(date);
 
     if(group !== currentGroup){
-
       const groupOption = document.createElement('option');
       groupOption.disabled = true;
       groupOption.textContent = '── '+group+' ──';
       day.appendChild(groupOption);
-
       currentGroup = group;
     }
 
@@ -674,54 +614,38 @@ function setupDays(selectedDate=''){
 
     day.add(new Option(label,key));
     filterDay.add(new Option(label,key));
-
   });
 
   if(selectedDate){
-
     const exists = [...day.options].some(
       option=>option.value === selectedDate
     );
 
     if(!exists){
-
       const date = parseLocalDate(selectedDate);
-
       if(date){
         day.add(new Option(
           getDateDayName(date)+' '+formatDate(date),
           selectedDate
         ));
       }
-
     }
-
     day.value = selectedDate;
   }
-
 }
 
-/* =====================================
-   MENSAJES
-===================================== */
-
+/* MENSAJES */
 function showStatus(message,type='info'){
-
   statusEl.textContent = message;
   statusEl.className = 'status show '+type;
-
   clearTimeout(statusTimer);
 
   statusTimer = setTimeout(()=>{
     statusEl.className = 'status';
   },4000);
-
 }
 
-/* =====================================
-   FORMATO
-===================================== */
-
+/* FORMATO */
 const money = n => new Intl.NumberFormat('es-DO',{
   style:'currency',
   currency:'DOP',
@@ -729,7 +653,6 @@ const money = n => new Intl.NumberFormat('es-DO',{
 }).format(Number(n || 0));
 
 function escapeHtml(s){
-
   return String(s).replace(/[&<>"']/g,c=>({
     '&':'&amp;',
     '<':'&lt;',
@@ -737,15 +660,10 @@ function escapeHtml(s){
     '"':'&quot;',
     "'":'&#39;'
   }[c]));
-
 }
 
-/* =====================================
-   ETIQUETAS DE FECHAS
-===================================== */
-
+/* ETIQUETAS DE FECHAS */
 function getDateLabel(date){
-
   const today = getToday();
   const tomorrow = addDays(today,1);
 
@@ -760,15 +678,10 @@ function getDateLabel(date){
   return escapeHtml(
     getDateDayName(date)+' '+formatDate(date)
   );
-
 }
 
-/* =====================================
-   CARGAR PEDIDOS
-===================================== */
-
+/* CARGAR PEDIDOS */
 async function loadOrders(showLoading=false){
-
   const currentRequest = ++requestNumber;
 
   if(showLoading){
@@ -785,7 +698,6 @@ async function loadOrders(showLoading=false){
   if(currentRequest !== requestNumber)return;
 
   if(error){
-
     console.error(error);
 
     if(orders.length === 0){
@@ -797,26 +709,19 @@ async function loadOrders(showLoading=false){
       'Error conectando con Supabase: '+error.message,
       'error'
     );
-
     return;
   }
 
   orders = data || [];
   render();
-
 }
 
-/* =====================================
-   TIEMPO REAL
-===================================== */
-
+/* TIEMPO REAL */
 function subscribeToOrders(){
-
   if(realtimeChannel)return;
 
   realtimeChannel = supabaseClient
     .channel('pedidos-en-tiempo-real')
-
     .on(
       'postgres_changes',
       {
@@ -825,32 +730,24 @@ function subscribeToOrders(){
         table:'pedidos'
       },
       payload=>{
-
         clearTimeout(refreshTimer);
 
         refreshTimer = setTimeout(async()=>{
-
           await loadOrders();
 
           if(payload.eventType === 'INSERT'){
             showStatus('Nuevo pedido recibido automáticamente ☁️','success');
           }
-
           if(payload.eventType === 'UPDATE'){
             showStatus('Pedido actualizado automáticamente ☁️','success');
           }
-
           if(payload.eventType === 'DELETE'){
             showStatus('Pedido eliminado automáticamente ☁️','success');
           }
-
         },250);
-
       }
     )
-
     .subscribe((status,error)=>{
-
       console.log('Estado Realtime:',status);
 
       if(status === 'SUBSCRIBED'){
@@ -860,19 +757,12 @@ function subscribeToOrders(){
       if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         console.error('Problema con Realtime:',error);
       }
-
     });
-
 }
 
-/* =====================================
-   MOSTRAR LISTAS
-===================================== */
-
+/* MOSTRAR LISTAS */
 function renderList(container,items,isReceived){
-
   if(!items.length){
-
     container.innerHTML = `
       <div class="empty">
         ${isReceived
@@ -881,28 +771,20 @@ function renderList(container,items,isReceived){
         }
       </div>
     `;
-
     return;
   }
 
   const groups = new Map();
 
   items.forEach(o=>{
-
     const dateKey = String(o.fecha_pedido).slice(0,10);
-
-    if(!groups.has(dateKey)){
-      groups.set(dateKey,[]);
-    }
-
+    if(!groups.has(dateKey))groups.set(dateKey,[]);
     groups.get(dateKey).push(o);
-
   });
 
   let html = '';
 
   groups.forEach((groupItems,dateKey)=>{
-
     const date = parseLocalDate(dateKey);
 
     html += `
@@ -912,13 +794,21 @@ function renderList(container,items,isReceived){
     `;
 
     groupItems.forEach(o=>{
-
       const isToday =
         dateKey === localDateKey(getToday());
 
+      const isTomorrow =
+        dateKey === localDateKey(addDays(getToday(),1));
+
       html += `
         <div class="order ${
-          isReceived ? 'received-order' : (isToday ? 'today' : '')
+          isReceived
+            ? 'received-order'
+            : isToday
+              ? 'today'
+              : isTomorrow
+                ? 'tomorrow'
+                : ''
         }">
 
           <div class="supplier">
@@ -934,15 +824,11 @@ function renderList(container,items,isReceived){
           </div>
 
           <div class="actions">
-
             ${isReceived ? `
-
               <span class="received-label">
                 ✓ RECIBIDO
               </span>
-
             ` : `
-
               ${isToday ? `
                 <button class="received-btn"
                   data-received="${escapeHtml(o.id)}">
@@ -957,32 +843,22 @@ function renderList(container,items,isReceived){
               <button class="del"
                 data-del="${escapeHtml(o.id)}"
                 aria-label="Eliminar">🗑</button>
-
             `}
-
           </div>
         </div>
       `;
-
     });
-
   });
 
   container.innerHTML = html;
-
 }
 
-/* =====================================
-   MOSTRAR PEDIDOS Y TOTAL
-===================================== */
-
+/* MOSTRAR PEDIDOS Y TOTAL */
 function render(){
-
   const q = search.value.trim().toLowerCase();
   const selectedDate = filterDay.value;
 
   const filtered = orders.filter(o=>{
-
     const matchesSupplier =
       String(o.proveedor || '').toLowerCase().includes(q);
 
@@ -991,43 +867,27 @@ function render(){
       String(o.fecha_pedido).slice(0,10) === selectedDate;
 
     return matchesSupplier && matchesDate;
-
   });
 
-  const pending = filtered.filter(
-    o=>o.recibido !== true
-  );
+  const pending = filtered.filter(o=>o.recibido !== true);
+  const received = filtered.filter(o=>o.recibido === true);
 
-  const received = filtered.filter(
-    o=>o.recibido === true
-  );
-
-  // Lista de pedidos pendientes
   renderList(ordersEl,pending,false);
-
-  // Lista de pedidos recibidos, sin botones
   renderList(receivedOrdersEl,received,true);
 
-  // Contador de recibidos
   document.getElementById('receivedCount').textContent =
     received.length;
 
-  // TOTAL: solamente pedidos pendientes
   const totalPending = orders
     .filter(o=>o.recibido !== true)
     .reduce((sum,o)=>sum+Number(o.monto || 0),0);
 
   document.getElementById('grandTotal').textContent =
     money(totalPending);
-
 }
 
-/* =====================================
-   MODAL
-===================================== */
-
+/* MODAL */
 function openModal(){
-
   form.reset();
   editId.value = '';
 
@@ -1035,11 +895,8 @@ function openModal(){
   saveBtn.textContent = 'Guardar pedido';
 
   setupDays();
-
   modal.classList.add('active');
-
   setTimeout(()=>supplier.focus(),100);
-
 }
 
 function closeModal(){
@@ -1057,14 +914,9 @@ document.addEventListener('keydown',e=>{
   if(e.key === 'Escape')closeModal();
 });
 
-/* =====================================
-   GUARDAR Y EDITAR
-===================================== */
-
+/* GUARDAR Y EDITAR */
 form.addEventListener('submit',async e=>{
-
   e.preventDefault();
-
   if(saving)return;
 
   const proveedor = supplier.value.trim();
@@ -1096,52 +948,40 @@ form.addEventListener('submit',async e=>{
   const entry = {
     proveedor,
     fecha_pedido:fechaSeleccionada,
-    dia:getDateDayName(fecha)
+    dia:getDateDayName(fecha),
+    monto
   };
 
-  // El monto debe ser numérico
-  entry.monto = monto;
-
   try{
-
     let result;
 
     if(isEditing){
-
       result = await supabaseClient
         .from('pedidos')
         .update(entry)
         .eq('id',currentId)
         .select('id');
-
     }else{
-
       result = await supabaseClient
         .from('pedidos')
         .insert([entry])
         .select('id');
-
     }
 
     if(result.error){
-
       console.error(result.error);
-
       showStatus(
         'No se pudo guardar: '+result.error.message,
         'error'
       );
-
       return;
     }
 
     if(!result.data || result.data.length === 0){
-
       showStatus(
         'No se pudo guardar. Revisa los permisos de Supabase.',
         'error'
       );
-
       return;
     }
 
@@ -1157,43 +997,29 @@ form.addEventListener('submit',async e=>{
         : 'Pedido guardado correctamente ☁️',
       'success'
     );
-
   }catch(error){
-
     console.error(error);
-
     showStatus(
       'Error de conexión. Inténtalo nuevamente.',
       'error'
     );
-
   }finally{
-
     saving = false;
     saveBtn.disabled = false;
-
     saveBtn.textContent = editId.value
       ? 'Actualizar pedido'
       : 'Guardar pedido';
-
   }
-
 });
 
-/* =====================================
-   ACCIONES DE PEDIDOS PENDIENTES
-===================================== */
-
+/* ACCIONES DE PEDIDOS PENDIENTES */
 ordersEl.addEventListener('click',async e=>{
-
   const receivedButton = e.target.closest('[data-received]');
   const editButton = e.target.closest('[data-edit]');
   const deleteButton = e.target.closest('[data-del]');
 
   /* MARCAR RECIBIDO */
-
   if(receivedButton){
-
     const id = receivedButton.dataset.received;
 
     if(!confirm('¿Confirmas que este pedido fue recibido?')){
@@ -1204,7 +1030,6 @@ ordersEl.addEventListener('click',async e=>{
     receivedButton.textContent = 'Guardando...';
 
     try{
-
       const {data,error} = await supabaseClient
         .from('pedidos')
         .update({recibido:true})
@@ -1213,65 +1038,46 @@ ordersEl.addEventListener('click',async e=>{
         .select('id');
 
       if(error){
-
         console.error(error);
-
         showStatus(
           'No se pudo marcar como recibido: '+error.message,
           'error'
         );
-
         receivedButton.disabled = false;
         receivedButton.textContent = '✓ RECIBIDO';
-
         return;
       }
 
       if(!data || data.length === 0){
-
         await loadOrders();
-
         showStatus(
           'El pedido ya fue actualizado o no tienes permiso.',
           'error'
         );
-
         return;
       }
 
       await loadOrders();
-
       showStatus(
         '¡Pedido trasladado a Pedidos recibidos! ✓',
         'success'
       );
-
     }catch(error){
-
       console.error(error);
-
       showStatus(
         'Error de conexión al marcar como recibido.',
         'error'
       );
-
       receivedButton.disabled = false;
       receivedButton.textContent = '✓ RECIBIDO';
-
     }
-
     return;
   }
 
   /* EDITAR */
-
   if(editButton){
-
     const id = editButton.dataset.edit;
-
-    const o = orders.find(
-      x=>String(x.id) === String(id)
-    );
+    const o = orders.find(x=>String(x.id) === String(id));
 
     if(!o || o.recibido === true)return;
 
@@ -1279,9 +1085,7 @@ ordersEl.addEventListener('click',async e=>{
 
     supplier.value = o.proveedor;
 
-    const existingDate = String(
-      o.fecha_pedido || ''
-    ).slice(0,10);
+    const existingDate = String(o.fecha_pedido || '').slice(0,10);
 
     setupDays(existingDate);
     day.value = existingDate;
@@ -1290,19 +1094,13 @@ ordersEl.addEventListener('click',async e=>{
 
     modalTitle.textContent = '✏️ Editar pedido';
     saveBtn.textContent = 'Actualizar pedido';
-
     return;
   }
 
   /* ELIMINAR */
-
   if(deleteButton){
-
     const id = deleteButton.dataset.del;
-
-    const o = orders.find(
-      x=>String(x.id) === String(id)
-    );
+    const o = orders.find(x=>String(x.id) === String(id));
 
     if(!o || o.recibido === true)return;
 
@@ -1313,7 +1111,6 @@ ordersEl.addEventListener('click',async e=>{
     deleteButton.disabled = true;
 
     try{
-
       const {error} = await supabaseClient
         .from('pedidos')
         .delete()
@@ -1321,53 +1118,30 @@ ordersEl.addEventListener('click',async e=>{
         .eq('recibido',false);
 
       if(error){
-
         console.error(error);
-
         showStatus(
           'No se pudo eliminar: '+error.message,
           'error'
         );
-
         deleteButton.disabled = false;
         return;
       }
 
       await loadOrders();
-
-      showStatus(
-        'Pedido eliminado correctamente.',
-        'success'
-      );
-
+      showStatus('Pedido eliminado correctamente.','success');
     }catch(error){
-
       console.error(error);
-
-      showStatus(
-        'Error de conexión al eliminar.',
-        'error'
-      );
-
+      showStatus('Error de conexión al eliminar.','error');
       deleteButton.disabled = false;
-
     }
-
   }
-
 });
 
-/* =====================================
-   BUSCAR Y FILTRAR
-===================================== */
-
+/* BUSCAR Y FILTRAR */
 search.addEventListener('input',render);
 filterDay.addEventListener('change',render);
 
-/* =====================================
-   SINCRONIZACIÓN
-===================================== */
-
+/* SINCRONIZACIÓN */
 window.addEventListener('online',()=>{
   showStatus(
     'Conexión recuperada. Sincronizando pedidos...',
@@ -1381,17 +1155,11 @@ window.addEventListener('focus',()=>{
 });
 
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden){
-    loadOrders();
-  }
+  if(!document.hidden)loadOrders();
 });
 
-/* =====================================
-   REINICIO VISUAL A MEDIANOCHE
-===================================== */
-
+/* ACTUALIZACIÓN AL CAMBIAR EL DÍA */
 function scheduleMidnightRefresh(){
-
   clearTimeout(midnightTimer);
 
   const now = new Date();
@@ -1406,34 +1174,23 @@ function scheduleMidnightRefresh(){
   const delay = nextMidnight.getTime()-now.getTime();
 
   midnightTimer = setTimeout(async()=>{
-
     setupDays();
-
     await loadOrders();
 
     showStatus(
-      'Nuevo día. Se actualizaron los pedidos recibidos.',
+      'Nuevo día. Se actualizaron las listas y los colores.',
       'success'
     );
 
     scheduleMidnightRefresh();
-
   },delay);
-
 }
 
-/* =====================================
-   INICIAR APLICACIÓN
-===================================== */
-
+/* INICIAR APLICACIÓN */
 setupDays();
-
 loadOrders(true);
-
 subscribeToOrders();
-
 scheduleMidnightRefresh();
-
 </script>
 
 </body>
