@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f5f6f8">
+<meta name="theme-color" content="#ffffff">
 <title>Anotar Pedidos</title>
 
 <style>
@@ -20,48 +20,89 @@
 body{
   margin:0 auto;
   max-width:900px;
-  padding:16px;
+  padding:0 16px 100px;
   background:linear-gradient(180deg,#fff,#f0f2f5);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   color:var(--text);
 }
 
-.header{text-align:center;padding:16px 0 22px}
+/* HEADER FIJO */
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:150;
+  background:#fff;
+  margin:0 -16px;
+  padding:12px 16px 14px;
+  border-bottom:1px solid #e9ebef;
+  box-shadow:0 4px 15px #00000008;
+}
+
+.header-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:43px;
+}
+
+.menu-btn{
+  width:43px;
+  height:43px;
+  border:0;
+  border-radius:13px;
+  background:#fff5d4;
+  color:#987300;
+  font-size:23px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+
 .logo{
-  font-size:clamp(34px,9vw,54px);
+  font-size:clamp(23px,6vw,30px);
   font-weight:900;
-  line-height:.95;
-  letter-spacing:-2px;
+  letter-spacing:-1px;
+  flex:1;
 }
 .logo span{color:var(--gold)}
-.sub{color:var(--muted);margin-top:8px}
+
+.header-tools{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
+.header-tools input,
+.header-tools select{
+  min-width:0;
+  width:50%;
+  flex:1;
+  background:#f7f8fa;
+  color:#222;
+  border:1px solid #e1e4e8;
+  border-radius:12px;
+  padding:12px 10px;
+  font-size:14px;
+  outline:none;
+}
+
+.header-tools input:focus,
+.header-tools select:focus{
+  border-color:#d5a400;
+  background:white;
+}
+
+/* CONTENIDO */
 
 .panel{
   background:#fff;
   border:1px solid var(--line);
   border-radius:22px;
   padding:18px;
-  margin-bottom:16px;
+  margin:18px 0 16px;
   box-shadow:0 5px 20px #00000008;
 }
 .panel h2{font-size:20px;margin:0 0 16px}
-
-.toolbar{
-  display:flex;
-  gap:9px;
-  flex-wrap:wrap;
-  margin-bottom:12px;
-}
-.toolbar input,.toolbar select{
-  flex:1;
-  min-width:130px;
-  background:#fff;
-  color:#222;
-  border:1px solid #ccc;
-  border-radius:12px;
-  padding:12px;
-  font-size:15px;
-}
 
 .week-heading{
   background:#fff9df;
@@ -165,7 +206,8 @@ body{
 .status.success{background:#eefaf0;color:#217a35}
 .status.info{background:#eef5ff;color:#2162aa}
 
-/* PEDIDOS DE HOY: VERDE CLARO */
+/* HOY */
+
 .order.today{
   background:#e9f9ed;
   border:1px solid #a5dfb1;
@@ -181,7 +223,8 @@ body{
   background:#f4fff6;
 }
 
-/* PEDIDOS DE MAÑANA: AZUL CLARO */
+/* MAÑANA */
+
 .order.tomorrow{
   background:#e8f4ff;
   border:1px solid #acd5f5;
@@ -215,21 +258,73 @@ body{
   font-weight:900;
 }
 
-/* PEDIDOS RECIBIDOS */
-.received-section{
-  margin-top:22px;
-  padding-top:16px;
-  border-top:2px dashed #e5e5e5;
+/* PANEL LATERAL */
+
+.drawer-overlay{
+  position:fixed;
+  inset:0;
+  background:#0007;
+  z-index:300;
+  display:none;
 }
-.received-heading{
+.drawer-overlay.active{display:block}
+
+.drawer{
+  position:fixed;
+  top:0;
+  left:0;
+  bottom:0;
+  width:min(340px,88vw);
+  background:#fff;
+  z-index:301;
+  transform:translateX(-105%);
+  transition:transform .25s ease;
+  display:flex;
+  flex-direction:column;
+  box-shadow:8px 0 30px #0002;
+}
+.drawer.active{transform:translateX(0)}
+
+.drawer-header{
+  padding:22px 18px;
+  background:#fff9df;
+  border-bottom:1px solid #eee7cc;
+}
+.drawer-title{
+  font-size:22px;
+  font-weight:900;
+}
+.drawer-title span{color:#bd9200}
+.drawer-sub{
+  color:#887b53;
+  font-size:13px;
+  margin-top:5px;
+}
+.drawer-close{
+  float:right;
+  border:0;
+  border-radius:50%;
+  width:35px;
+  height:35px;
+  font-size:20px;
+  background:#fff;
+  cursor:pointer;
+}
+
+.drawer-content{
+  overflow-y:auto;
+  padding:16px;
+  flex:1;
+}
+
+.drawer-section-title{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:8px;
-  color:#16813b;
-  font-size:18px;
+  font-size:17px;
   font-weight:900;
-  margin-bottom:10px;
+  color:#16813b;
+  margin-bottom:12px;
 }
 .received-count{
   background:#e9f9ed;
@@ -238,6 +333,12 @@ body{
   border-radius:20px;
   font-size:12px;
 }
+
+.received-info{
+  font-size:12px;
+  color:#999;
+  margin-bottom:12px;
+}
 .order.received-order{
   background:transparent;
   border:1px solid transparent;
@@ -245,7 +346,7 @@ body{
   border-radius:12px;
   padding:14px 8px;
   margin:5px 0;
-  opacity:.68;
+  opacity:.75;
 }
 .order.received-order .supplier{color:#68736b}
 .order.received-order .day{color:#929a93}
@@ -264,11 +365,8 @@ body{
   font-weight:900;
   white-space:nowrap;
 }
-.received-info{
-  font-size:12px;
-  color:#999;
-  margin:4px 0 12px;
-}
+
+/* BOTÓN AGREGAR */
 
 .fab{
   position:fixed;
@@ -290,6 +388,8 @@ body{
 }
 .fab:active{transform:scale(.93)}
 
+/* MODAL */
+
 .modal{
   position:fixed;
   inset:0;
@@ -299,7 +399,7 @@ body{
   align-items:center;
   justify-content:center;
   padding:15px;
-  z-index:200;
+  z-index:400;
 }
 .modal.active{display:flex}
 .modal-box{
@@ -375,7 +475,11 @@ body{
 }
 
 @media(max-width:520px){
-  body{padding:12px}
+  body{padding:0 12px 100px}
+  .header{
+    margin:0 -12px;
+    padding:10px 12px 12px;
+  }
   .panel{padding:15px}
   .order{gap:8px}
   .supplier{flex-basis:100%}
@@ -389,40 +493,30 @@ body{
 
 <body>
 
+<!-- HEADER FIJO -->
 <header class="header">
-  <div class="logo">Anotar <span>Pedidos</span></div>
-  <div class="sub">Organiza tus pedidos por proveedor y día</div>
+
+  <div class="header-top">
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
+    <div class="logo">Anotar <span>Pedidos</span></div>
+  </div>
+
+  <div class="header-tools">
+    <input id="search" placeholder="🔍 Buscar proveedor…">
+    <select id="filterDay">
+      <option value="">📅 Todas las fechas</option>
+    </select>
+  </div>
+
 </header>
 
+<!-- PEDIDOS PENDIENTES -->
 <section class="panel">
   <h2>📋 Mis pedidos pendientes</h2>
   <div id="status" class="status"></div>
 
-  <div class="toolbar">
-    <input id="search" placeholder="🔍 Buscar proveedor…">
-    <select id="filterDay">
-      <option value="">Todos los días</option>
-    </select>
-  </div>
-
   <div id="orders">
     <div class="empty">Conectando con la base de datos...</div>
-  </div>
-
-  <div class="received-section">
-    <div class="received-heading">
-      <span>✓ Pedidos recibidos</span>
-      <span class="received-count" id="receivedCount">0</span>
-    </div>
-
-    <div class="received-info">
-      Estos pedidos no tienen botones y no se suman al total.
-      Se restablecen a las 12:00 a. m.
-    </div>
-
-    <div id="receivedOrders">
-      <div class="empty">Todavía no hay pedidos recibidos.</div>
-    </div>
   </div>
 </section>
 
@@ -435,10 +529,43 @@ body{
   ☁️ Tus pedidos se guardan en la nube con Supabase.
 </div>
 
+<!-- BOTÓN AGREGAR -->
 <button class="fab" id="openModal" aria-label="Agregar pedido">+</button>
 
+<!-- MENÚ LATERAL -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<aside class="drawer" id="drawer">
+
+  <div class="drawer-header">
+    <button class="drawer-close" id="drawerClose">✕</button>
+    <div class="drawer-title">Anotar <span>Pedidos</span></div>
+    <div class="drawer-sub">Administración de pedidos</div>
+  </div>
+
+  <div class="drawer-content">
+
+    <div class="drawer-section-title">
+      <span>✓ Pedidos recibidos</span>
+      <span class="received-count" id="receivedCount">0</span>
+    </div>
+
+    <div class="received-info">
+      Estos pedidos ya fueron recibidos y no se suman al total pendiente.
+    </div>
+
+    <div id="receivedOrders">
+      <div class="empty">Todavía no hay pedidos recibidos.</div>
+    </div>
+
+  </div>
+
+</aside>
+
+<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-box">
+
     <div class="modal-header">
       <h2 id="modalTitle">➕ Registrar pedido</h2>
       <button class="close" id="closeModal" type="button">✕</button>
@@ -449,7 +576,8 @@ body{
 
       <div class="field">
         <label for="supplier">Proveedor</label>
-        <input id="supplier" placeholder="Nombre del proveedor"
+        <input id="supplier"
+          placeholder="Nombre del proveedor"
           required maxlength="100">
       </div>
 
@@ -463,21 +591,27 @@ body{
 
       <div class="field">
         <label for="amount">Total del pedido (RD$)</label>
-        <input id="amount" type="number" inputmode="decimal"
-          min="0" step="0.01" placeholder="0.00" required>
+        <input id="amount"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          required>
       </div>
 
       <button class="btn primary" id="saveBtn" type="submit">
         Guardar pedido
       </button>
     </form>
+
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* CONFIGURACIÓN SUPABASE */
+/* SUPABASE */
 const SUPABASE_URL =
 'https://igvjtymodcijosjjeyqh.supabase.co';
 
@@ -505,6 +639,8 @@ const openModalBtn = document.getElementById('openModal');
 const closeModalBtn = document.getElementById('closeModal');
 const modalTitle = document.getElementById('modalTitle');
 const statusEl = document.getElementById('status');
+const drawer = document.getElementById('drawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
 
 const allDays = [
   'Domingo','Lunes','Martes','Miércoles',
@@ -519,7 +655,22 @@ let refreshTimer = null;
 let statusTimer = null;
 let midnightTimer = null;
 
-/* FECHAS LOCALES */
+/* MENÚ */
+function openDrawer(){
+  drawer.classList.add('active');
+  drawerOverlay.classList.add('active');
+}
+
+function closeDrawer(){
+  drawer.classList.remove('active');
+  drawerOverlay.classList.remove('active');
+}
+
+document.getElementById('menuBtn').addEventListener('click',openDrawer);
+document.getElementById('drawerClose').addEventListener('click',closeDrawer);
+drawerOverlay.addEventListener('click',closeDrawer);
+
+/* FECHAS */
 function localDateKey(date){
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,'0');
@@ -587,8 +738,9 @@ function setupDays(selectedDate=''){
 
   day.innerHTML =
     '<option value="">Selecciona una fecha</option>';
+
   filterDay.innerHTML =
-    '<option value="">Todos los días</option>';
+    '<option value="">📅 Todas las fechas</option>';
 
   let currentGroup = '';
 
@@ -662,7 +814,7 @@ function escapeHtml(s){
   }[c]));
 }
 
-/* ETIQUETAS DE FECHAS */
+/* ETIQUETAS */
 function getDateLabel(date){
   const today = getToday();
   const tomorrow = addDays(today,1);
@@ -680,7 +832,7 @@ function getDateLabel(date){
   );
 }
 
-/* CARGAR PEDIDOS */
+/* CARGAR */
 async function loadOrders(showLoading=false){
   const currentRequest = ++requestNumber;
 
@@ -760,7 +912,7 @@ function subscribeToOrders(){
     });
 }
 
-/* MOSTRAR LISTAS */
+/* LISTAS */
 function renderList(container,items,isReceived){
   if(!items.length){
     container.innerHTML = `
@@ -825,9 +977,7 @@ function renderList(container,items,isReceived){
 
           <div class="actions">
             ${isReceived ? `
-              <span class="received-label">
-                ✓ RECIBIDO
-              </span>
+              <span class="received-label">✓ RECIBIDO</span>
             ` : `
               ${isToday ? `
                 <button class="received-btn"
@@ -837,12 +987,10 @@ function renderList(container,items,isReceived){
               ` : ''}
 
               <button class="edit"
-                data-edit="${escapeHtml(o.id)}"
-                aria-label="Editar">✎</button>
+                data-edit="${escapeHtml(o.id)}">✎</button>
 
               <button class="del"
-                data-del="${escapeHtml(o.id)}"
-                aria-label="Eliminar">🗑</button>
+                data-del="${escapeHtml(o.id)}">🗑</button>
             `}
           </div>
         </div>
@@ -853,7 +1001,7 @@ function renderList(container,items,isReceived){
   container.innerHTML = html;
 }
 
-/* MOSTRAR PEDIDOS Y TOTAL */
+/* RENDERIZAR */
 function render(){
   const q = search.value.trim().toLowerCase();
   const selectedDate = filterDay.value;
@@ -911,7 +1059,10 @@ modal.addEventListener('click',e=>{
 });
 
 document.addEventListener('keydown',e=>{
-  if(e.key === 'Escape')closeModal();
+  if(e.key === 'Escape'){
+    closeModal();
+    closeDrawer();
+  }
 });
 
 /* GUARDAR Y EDITAR */
@@ -1012,13 +1163,13 @@ form.addEventListener('submit',async e=>{
   }
 });
 
-/* ACCIONES DE PEDIDOS PENDIENTES */
+/* ACCIONES */
 ordersEl.addEventListener('click',async e=>{
   const receivedButton = e.target.closest('[data-received]');
   const editButton = e.target.closest('[data-edit]');
   const deleteButton = e.target.closest('[data-del]');
 
-  /* MARCAR RECIBIDO */
+  /* RECIBIDO */
   if(receivedButton){
     const id = receivedButton.dataset.received;
 
@@ -1059,7 +1210,7 @@ ordersEl.addEventListener('click',async e=>{
 
       await loadOrders();
       showStatus(
-        '¡Pedido trasladado a Pedidos recibidos! ✓',
+        '¡Pedido trasladado al menú de recibidos! ✓',
         'success'
       );
     }catch(error){
@@ -1158,7 +1309,7 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden)loadOrders();
 });
 
-/* ACTUALIZACIÓN AL CAMBIAR EL DÍA */
+/* CAMBIO DE DÍA */
 function scheduleMidnightRefresh(){
   clearTimeout(midnightTimer);
 
@@ -1186,7 +1337,7 @@ function scheduleMidnightRefresh(){
   },delay);
 }
 
-/* INICIAR APLICACIÓN */
+/* INICIAR */
 setupDays();
 loadOrders(true);
 subscribeToOrders();
