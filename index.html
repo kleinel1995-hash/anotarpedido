@@ -9,8 +9,6 @@
 
 <style>
 :root{
-  --bg:#f4f6f8;
-  --panel:#fff;
   --gold:#d5a400;
   --gold2:#f4c430;
   --line:#e4e7eb;
@@ -39,7 +37,7 @@ body{
 .sub{color:var(--muted);margin-top:8px}
 
 .panel{
-  background:var(--panel);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:22px;
   padding:18px;
@@ -83,6 +81,7 @@ body{
   border-top:1px solid #eee;
   flex-wrap:wrap;
 }
+
 .supplier{
   font-weight:700;
   flex:1;
@@ -103,7 +102,13 @@ body{
   white-space:nowrap;
   background:#fffdf5;
 }
-.actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+.actions{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
 .edit,.del,.received-btn{
   border:0;
@@ -191,15 +196,73 @@ body{
   font-size:12px;
   font-weight:900;
 }
+
+/* PEDIDOS RECIBIDOS: TRANSPARENTES */
+
+.received-section{
+  margin-top:22px;
+  padding-top:16px;
+  border-top:2px dashed #e5e5e5;
+}
+
+.received-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  color:#16813b;
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.received-count{
+  background:#e9f9ed;
+  color:#16813b;
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+}
+
+.order.received-order{
+  background:transparent;
+  border:1px solid transparent;
+  border-bottom:1px dashed #dfe3e6;
+  border-radius:12px;
+  padding:14px 8px;
+  margin:5px 0;
+  opacity:.68;
+}
+
+.order.received-order .supplier{
+  color:#68736b;
+}
+
+.order.received-order .day{
+  color:#929a93;
+}
+
+.order.received-order .amount{
+  background:transparent;
+  border:1px solid #cfd8d1;
+  color:#6b8872;
+}
+
 .received-label{
-  background:#d0f3d9;
-  color:#167536;
-  border:1px solid #9bd8aa;
-  padding:8px 11px;
+  background:#e6f5e9;
+  color:#16813b;
+  border:1px solid #b8ddc0;
+  padding:8px 12px;
   border-radius:10px;
   font-size:12px;
   font-weight:900;
   white-space:nowrap;
+}
+
+.received-info{
+  font-size:12px;
+  color:#999;
+  margin:4px 0 12px;
 }
 
 .fab{
@@ -300,7 +363,6 @@ body{
   margin-top:8px;
 }
 .primary:disabled{opacity:.6;cursor:wait}
-
 .date-hint{
   font-size:12px;
   color:#888;
@@ -328,7 +390,7 @@ body{
 </header>
 
 <section class="panel">
-  <h2>📋 Mis pedidos</h2>
+  <h2>📋 Mis pedidos pendientes</h2>
 
   <div id="status" class="status"></div>
 
@@ -342,10 +404,30 @@ body{
   <div id="orders">
     <div class="empty">Conectando con la base de datos...</div>
   </div>
+
+  <!-- SECCIÓN SEPARADA DE RECIBIDOS -->
+
+  <div class="received-section">
+
+    <div class="received-heading">
+      <span>✓ Pedidos recibidos</span>
+      <span class="received-count" id="receivedCount">0</span>
+    </div>
+
+    <div class="received-info">
+      Estos pedidos no tienen botones y no se suman al total.
+      Se restablecen a las 12:00 a. m.
+    </div>
+
+    <div id="receivedOrders">
+      <div class="empty">Todavía no hay pedidos recibidos.</div>
+    </div>
+
+  </div>
 </section>
 
 <section class="panel totalbox">
-  <span>📊 Total general</span>
+  <span>📊 Total pendiente</span>
   <span class="total" id="grandTotal">RD$ 0.00</span>
 </section>
 
@@ -408,9 +490,11 @@ body{
    CONFIGURACIÓN SUPABASE
 ===================================== */
 
-const SUPABASE_URL = 'https://igvjtymodcijosjjeyqh.supabase.co';
+const SUPABASE_URL =
+'https://igvjtymodcijosjjeyqh.supabase.co';
 
-const SUPABASE_KEY = 'sb_publishable_ilARQhS4BpVAo76F8axvhg_jTZAonlh';
+const SUPABASE_KEY =
+'sb_publishable_ilARQhS4BpVAo76F8axvhg_jTZAonlh';
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
@@ -427,6 +511,7 @@ const day = document.getElementById('day');
 const amount = document.getElementById('amount');
 const editId = document.getElementById('editId');
 const ordersEl = document.getElementById('orders');
+const receivedOrdersEl = document.getElementById('receivedOrders');
 const search = document.getElementById('search');
 const filterDay = document.getElementById('filterDay');
 const saveBtn = document.getElementById('saveBtn');
@@ -452,6 +537,7 @@ let requestNumber = 0;
 let realtimeChannel = null;
 let refreshTimer = null;
 let statusTimer = null;
+let midnightTimer = null;
 
 /* =====================================
    FECHAS LOCALES
@@ -461,12 +547,11 @@ function localDateKey(date){
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,'0');
   const d = String(date.getDate()).padStart(2,'0');
-
   return `${y}-${m}-${d}`;
 }
 
 function parseLocalDate(value){
-  if(!value) return null;
+  if(!value)return null;
 
   const parts = String(value).slice(0,10).split('-').map(Number);
 
@@ -485,7 +570,6 @@ function addDays(date,amount){
   );
 
   result.setDate(result.getDate()+amount);
-
   return result;
 }
 
@@ -521,15 +605,6 @@ function formatLongDate(date){
 /* =====================================
    CALENDARIO SEMANAL
 ===================================== */
-
-/*
-  Muestra desde hoy hasta el domingo
-  de la próxima semana.
-
-  Ejemplo:
-  Viernes, sábado, domingo,
-  lunes de la próxima semana...
-*/
 
 function getCalendarDates(){
 
@@ -582,18 +657,14 @@ function setupDays(selectedDate=''){
     if(group !== currentGroup){
 
       const groupOption = document.createElement('option');
-
       groupOption.disabled = true;
       groupOption.textContent = '── '+group+' ──';
-
       day.appendChild(groupOption);
 
       currentGroup = group;
     }
 
-    const dateName = getDateDayName(date);
-
-    let label = `${dateName} ${formatDate(date)}`;
+    let label = `${getDateDayName(date)} ${formatDate(date)}`;
 
     if(key === localDateKey(getToday())){
       label = 'HOY · '+label;
@@ -601,13 +672,8 @@ function setupDays(selectedDate=''){
       label = 'MAÑANA · '+label;
     }
 
-    const option = new Option(label,key);
-
-    day.add(option);
-
-    filterDay.add(
-      new Option(label,key)
-    );
+    day.add(new Option(label,key));
+    filterDay.add(new Option(label,key));
 
   });
 
@@ -622,14 +688,10 @@ function setupDays(selectedDate=''){
       const date = parseLocalDate(selectedDate);
 
       if(date){
-
-        day.add(
-          new Option(
-            getDateDayName(date)+' '+formatDate(date),
-            selectedDate
-          )
-        );
-
+        day.add(new Option(
+          getDateDayName(date)+' '+formatDate(date),
+          selectedDate
+        ));
       }
 
     }
@@ -651,9 +713,7 @@ function showStatus(message,type='info'){
   clearTimeout(statusTimer);
 
   statusTimer = setTimeout(()=>{
-
     statusEl.className = 'status';
-
   },4000);
 
 }
@@ -687,7 +747,6 @@ function escapeHtml(s){
 function getDateLabel(date){
 
   const today = getToday();
-
   const tomorrow = addDays(today,1);
 
   if(localDateKey(date) === localDateKey(today)){
@@ -713,10 +772,8 @@ async function loadOrders(showLoading=false){
   const currentRequest = ++requestNumber;
 
   if(showLoading){
-
     ordersEl.innerHTML =
       '<div class="empty">☁️ Cargando pedidos...</div>';
-
   }
 
   const {data,error} = await supabaseClient
@@ -732,10 +789,8 @@ async function loadOrders(showLoading=false){
     console.error(error);
 
     if(orders.length === 0){
-
       ordersEl.innerHTML =
         '<div class="empty">No se pudieron cargar los pedidos.</div>';
-
     }
 
     showStatus(
@@ -747,13 +802,12 @@ async function loadOrders(showLoading=false){
   }
 
   orders = data || [];
-
   render();
 
 }
 
 /* =====================================
-   ACTUALIZACIÓN EN TIEMPO REAL
+   TIEMPO REAL
 ===================================== */
 
 function subscribeToOrders(){
@@ -771,8 +825,6 @@ function subscribeToOrders(){
         table:'pedidos'
       },
       payload=>{
-
-        console.log('Cambio detectado:',payload);
 
         clearTimeout(refreshTimer);
 
@@ -802,11 +854,7 @@ function subscribeToOrders(){
       console.log('Estado Realtime:',status);
 
       if(status === 'SUBSCRIBED'){
-
-        console.log('Conectado a actualizaciones en tiempo real.');
-
         loadOrders();
-
       }
 
       if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
@@ -818,15 +866,120 @@ function subscribeToOrders(){
 }
 
 /* =====================================
-   MOSTRAR PEDIDOS
+   MOSTRAR LISTAS
+===================================== */
+
+function renderList(container,items,isReceived){
+
+  if(!items.length){
+
+    container.innerHTML = `
+      <div class="empty">
+        ${isReceived
+          ? 'Todavía no hay pedidos recibidos.'
+          : 'No hay pedidos pendientes para mostrar.'
+        }
+      </div>
+    `;
+
+    return;
+  }
+
+  const groups = new Map();
+
+  items.forEach(o=>{
+
+    const dateKey = String(o.fecha_pedido).slice(0,10);
+
+    if(!groups.has(dateKey)){
+      groups.set(dateKey,[]);
+    }
+
+    groups.get(dateKey).push(o);
+
+  });
+
+  let html = '';
+
+  groups.forEach((groupItems,dateKey)=>{
+
+    const date = parseLocalDate(dateKey);
+
+    html += `
+      <div class="week-heading">
+        ${getWeekGroup(date)} · ${escapeHtml(formatLongDate(date))}
+      </div>
+    `;
+
+    groupItems.forEach(o=>{
+
+      const isToday =
+        dateKey === localDateKey(getToday());
+
+      html += `
+        <div class="order ${
+          isReceived ? 'received-order' : (isToday ? 'today' : '')
+        }">
+
+          <div class="supplier">
+            👥 ${escapeHtml(o.proveedor)}
+          </div>
+
+          <div class="day">
+            ${getDateLabel(date)}
+          </div>
+
+          <div class="amount">
+            ${money(o.monto)}
+          </div>
+
+          <div class="actions">
+
+            ${isReceived ? `
+
+              <span class="received-label">
+                ✓ RECIBIDO
+              </span>
+
+            ` : `
+
+              ${isToday ? `
+                <button class="received-btn"
+                  data-received="${escapeHtml(o.id)}">
+                  ✓ RECIBIDO
+                </button>
+              ` : ''}
+
+              <button class="edit"
+                data-edit="${escapeHtml(o.id)}"
+                aria-label="Editar">✎</button>
+
+              <button class="del"
+                data-del="${escapeHtml(o.id)}"
+                aria-label="Eliminar">🗑</button>
+
+            `}
+
+          </div>
+        </div>
+      `;
+
+    });
+
+  });
+
+  container.innerHTML = html;
+
+}
+
+/* =====================================
+   MOSTRAR PEDIDOS Y TOTAL
 ===================================== */
 
 function render(){
 
   const q = search.value.trim().toLowerCase();
   const selectedDate = filterDay.value;
-
-  const todayKey = localDateKey(getToday());
 
   const filtered = orders.filter(o=>{
 
@@ -841,115 +994,31 @@ function render(){
 
   });
 
-  const groups = new Map();
-
-  filtered.forEach(o=>{
-
-    const dateKey = String(o.fecha_pedido).slice(0,10);
-
-    if(!groups.has(dateKey)){
-      groups.set(dateKey,[]);
-    }
-
-    groups.get(dateKey).push(o);
-
-  });
-
-  if(filtered.length){
-
-    let html = '';
-
-    groups.forEach((items,dateKey)=>{
-
-      const date = parseLocalDate(dateKey);
-
-      const group = getWeekGroup(date);
-
-      html += `
-        <div class="week-heading">
-          ${group} · ${escapeHtml(formatLongDate(date))}
-        </div>
-      `;
-
-      items.forEach(o=>{
-
-        const isToday = dateKey === todayKey;
-        const received = o.recibido === true;
-
-        html += `
-
-          <div class="order ${isToday?'today':''}">
-
-            <div class="supplier">
-              👥 ${escapeHtml(o.proveedor)}
-            </div>
-
-            <div class="day">
-              ${getDateLabel(date)}
-            </div>
-
-            <div class="amount">
-              ${money(o.monto)}
-            </div>
-
-            <div class="actions">
-
-              ${isToday ? (
-
-                received
-
-                ? '<span class="received-label">✓ RECIBIDO</span>'
-
-                : `<button class="received-btn"
-                    data-received="${escapeHtml(o.id)}">
-                    ✓ RECIBIDO
-                  </button>`
-
-              ) : ''}
-
-              <button class="edit"
-                data-edit="${escapeHtml(o.id)}"
-                aria-label="Editar">✎</button>
-
-              <button class="del"
-                data-del="${escapeHtml(o.id)}"
-                aria-label="Eliminar">🗑</button>
-
-            </div>
-
-          </div>
-
-        `;
-
-      });
-
-    });
-
-    ordersEl.innerHTML = html;
-
-  }else{
-
-    ordersEl.innerHTML = `
-
-      <div class="empty">
-
-        ${orders.length
-          ? 'No hay pedidos que coincidan.'
-          : 'Todavía no tienes pedidos guardados. Pulsa + para agregar tu primer pedido.'
-        }
-
-      </div>
-
-    `;
-
-  }
-
-  const total = orders.reduce(
-    (sum,o)=>sum+Number(o.monto || 0),0
+  const pending = filtered.filter(
+    o=>o.recibido !== true
   );
 
+  const received = filtered.filter(
+    o=>o.recibido === true
+  );
+
+  // Lista de pedidos pendientes
+  renderList(ordersEl,pending,false);
+
+  // Lista de pedidos recibidos, sin botones
+  renderList(receivedOrdersEl,received,true);
+
+  // Contador de recibidos
+  document.getElementById('receivedCount').textContent =
+    received.length;
+
+  // TOTAL: solamente pedidos pendientes
+  const totalPending = orders
+    .filter(o=>o.recibido !== true)
+    .reduce((sum,o)=>sum+Number(o.monto || 0),0);
+
   document.getElementById('grandTotal').textContent =
-    money(total);
+    money(totalPending);
 
 }
 
@@ -960,11 +1029,9 @@ function render(){
 function openModal(){
 
   form.reset();
-
   editId.value = '';
 
   modalTitle.textContent = '➕ Registrar pedido';
-
   saveBtn.textContent = 'Guardar pedido';
 
   setupDays();
@@ -976,29 +1043,22 @@ function openModal(){
 }
 
 function closeModal(){
-
   modal.classList.remove('active');
-
 }
 
 openModalBtn.addEventListener('click',openModal);
-
 closeModalBtn.addEventListener('click',closeModal);
 
 modal.addEventListener('click',e=>{
-
   if(e.target === modal)closeModal();
-
 });
 
 document.addEventListener('keydown',e=>{
-
   if(e.key === 'Escape')closeModal();
-
 });
 
 /* =====================================
-   GUARDAR Y ACTUALIZAR
+   GUARDAR Y EDITAR
 ===================================== */
 
 form.addEventListener('submit',async e=>{
@@ -1008,11 +1068,8 @@ form.addEventListener('submit',async e=>{
   if(saving)return;
 
   const proveedor = supplier.value.trim();
-
   const fechaSeleccionada = day.value;
-
   const fecha = parseLocalDate(fechaSeleccionada);
-
   const monto = Number(amount.value);
 
   if(
@@ -1022,19 +1079,14 @@ form.addEventListener('submit',async e=>{
     !Number.isFinite(monto) ||
     monto < 0
   ){
-
     showStatus('Verifica los datos del pedido.','error');
-
     return;
-
   }
 
   saving = true;
-
   saveBtn.disabled = true;
 
   const isEditing = Boolean(editId.value);
-
   const currentId = editId.value;
 
   saveBtn.textContent = isEditing
@@ -1044,9 +1096,11 @@ form.addEventListener('submit',async e=>{
   const entry = {
     proveedor,
     fecha_pedido:fechaSeleccionada,
-    dia:getDateDayName(fecha),
-    monto
+    dia:getDateDayName(fecha)
   };
+
+  // El monto debe ser numérico
+  entry.monto = monto;
 
   try{
 
@@ -1079,7 +1133,6 @@ form.addEventListener('submit',async e=>{
       );
 
       return;
-
     }
 
     if(!result.data || result.data.length === 0){
@@ -1090,13 +1143,10 @@ form.addEventListener('submit',async e=>{
       );
 
       return;
-
     }
 
     closeModal();
-
     form.reset();
-
     editId.value = '';
 
     await loadOrders();
@@ -1120,7 +1170,6 @@ form.addEventListener('submit',async e=>{
   }finally{
 
     saving = false;
-
     saveBtn.disabled = false;
 
     saveBtn.textContent = editId.value
@@ -1132,14 +1181,14 @@ form.addEventListener('submit',async e=>{
 });
 
 /* =====================================
-   EDITAR, ELIMINAR Y RECIBIDO
+   ACCIONES DE PEDIDOS PENDIENTES
 ===================================== */
 
 ordersEl.addEventListener('click',async e=>{
 
+  const receivedButton = e.target.closest('[data-received]');
   const editButton = e.target.closest('[data-edit]');
   const deleteButton = e.target.closest('[data-del]');
-  const receivedButton = e.target.closest('[data-received]');
 
   /* MARCAR RECIBIDO */
 
@@ -1160,6 +1209,7 @@ ordersEl.addEventListener('click',async e=>{
         .from('pedidos')
         .update({recibido:true})
         .eq('id',id)
+        .eq('recibido',false)
         .select('id');
 
       if(error){
@@ -1179,13 +1229,12 @@ ordersEl.addEventListener('click',async e=>{
 
       if(!data || data.length === 0){
 
+        await loadOrders();
+
         showStatus(
-          'No se pudo actualizar. Revisa los permisos de Supabase.',
+          'El pedido ya fue actualizado o no tienes permiso.',
           'error'
         );
-
-        receivedButton.disabled = false;
-        receivedButton.textContent = '✓ RECIBIDO';
 
         return;
       }
@@ -1193,7 +1242,7 @@ ordersEl.addEventListener('click',async e=>{
       await loadOrders();
 
       showStatus(
-        '¡Pedido marcado como recibido correctamente! ✓',
+        '¡Pedido trasladado a Pedidos recibidos! ✓',
         'success'
       );
 
@@ -1224,7 +1273,7 @@ ordersEl.addEventListener('click',async e=>{
       x=>String(x.id) === String(id)
     );
 
-    if(!o)return;
+    if(!o || o.recibido === true)return;
 
     openModal();
 
@@ -1235,19 +1284,14 @@ ordersEl.addEventListener('click',async e=>{
     ).slice(0,10);
 
     setupDays(existingDate);
-
     day.value = existingDate;
-
     amount.value = o.monto;
-
     editId.value = o.id;
 
     modalTitle.textContent = '✏️ Editar pedido';
-
     saveBtn.textContent = 'Actualizar pedido';
 
     return;
-
   }
 
   /* ELIMINAR */
@@ -1255,6 +1299,12 @@ ordersEl.addEventListener('click',async e=>{
   if(deleteButton){
 
     const id = deleteButton.dataset.del;
+
+    const o = orders.find(
+      x=>String(x.id) === String(id)
+    );
+
+    if(!o || o.recibido === true)return;
 
     if(!confirm('¿Eliminar este pedido permanentemente?')){
       return;
@@ -1267,7 +1317,8 @@ ordersEl.addEventListener('click',async e=>{
       const {error} = await supabaseClient
         .from('pedidos')
         .delete()
-        .eq('id',id);
+        .eq('id',id)
+        .eq('recibido',false);
 
       if(error){
 
@@ -1279,7 +1330,6 @@ ordersEl.addEventListener('click',async e=>{
         );
 
         deleteButton.disabled = false;
-
         return;
       }
 
@@ -1312,7 +1362,6 @@ ordersEl.addEventListener('click',async e=>{
 ===================================== */
 
 search.addEventListener('input',render);
-
 filterDay.addEventListener('change',render);
 
 /* =====================================
@@ -1320,39 +1369,56 @@ filterDay.addEventListener('change',render);
 ===================================== */
 
 window.addEventListener('online',()=>{
-
   showStatus(
     'Conexión recuperada. Sincronizando pedidos...',
     'info'
   );
-
   loadOrders();
-
 });
 
 window.addEventListener('focus',()=>{
-
   loadOrders();
-
 });
 
 document.addEventListener('visibilitychange',()=>{
-
   if(!document.hidden){
     loadOrders();
   }
-
 });
 
 /* =====================================
-   CAMBIO DE DÍA AUTOMÁTICO
+   REINICIO VISUAL A MEDIANOCHE
 ===================================== */
 
-function refreshCalendar(){
+function scheduleMidnightRefresh(){
 
-  setupDays();
+  clearTimeout(midnightTimer);
 
-  render();
+  const now = new Date();
+
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()+1,
+    0,0,2
+  );
+
+  const delay = nextMidnight.getTime()-now.getTime();
+
+  midnightTimer = setTimeout(async()=>{
+
+    setupDays();
+
+    await loadOrders();
+
+    showStatus(
+      'Nuevo día. Se actualizaron los pedidos recibidos.',
+      'success'
+    );
+
+    scheduleMidnightRefresh();
+
+  },delay);
 
 }
 
@@ -1365,6 +1431,8 @@ setupDays();
 loadOrders(true);
 
 subscribeToOrders();
+
+scheduleMidnightRefresh();
 
 </script>
 
