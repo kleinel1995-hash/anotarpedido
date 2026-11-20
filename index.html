@@ -10,7 +10,7 @@
 <style>
 :root{
   --bg:#f4f6f8;
-  --panel:#ffffff;
+  --panel:#fff;
   --gold:#d5a400;
   --gold2:#f4c430;
   --line:#e4e7eb;
@@ -20,33 +20,23 @@
 *{box-sizing:border-box}
 
 body{
-  margin:0;
+  margin:0 auto;
+  max-width:900px;
+  padding:16px;
   background:linear-gradient(180deg,#fff,#f0f2f5);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   color:var(--text);
-  padding:16px;
-  max-width:900px;
-  margin:auto;
 }
 
-.header{
-  text-align:center;
-  padding:16px 0 22px;
-}
-
+.header{text-align:center;padding:16px 0 22px}
 .logo{
   font-size:clamp(34px,9vw,54px);
   font-weight:900;
   line-height:.95;
   letter-spacing:-2px;
 }
-
 .logo span{color:var(--gold)}
-
-.sub{
-  color:var(--muted);
-  margin-top:8px;
-}
+.sub{color:var(--muted);margin-top:8px}
 
 .panel{
   background:var(--panel);
@@ -56,11 +46,7 @@ body{
   margin-bottom:16px;
   box-shadow:0 5px 20px #00000008;
 }
-
-.panel h2{
-  font-size:20px;
-  margin:0 0 16px;
-}
+.panel h2{font-size:20px;margin:0 0 16px}
 
 .toolbar{
   display:flex;
@@ -68,7 +54,6 @@ body{
   flex-wrap:wrap;
   margin-bottom:12px;
 }
-
 .toolbar input,.toolbar select{
   flex:1;
   min-width:130px;
@@ -80,6 +65,16 @@ body{
   font-size:15px;
 }
 
+.week-heading{
+  background:#fff9df;
+  color:#947000;
+  padding:10px 13px;
+  border-radius:12px;
+  font-weight:900;
+  font-size:13px;
+  margin:15px 0 5px;
+}
+
 .order{
   display:flex;
   align-items:center;
@@ -88,20 +83,17 @@ body{
   border-top:1px solid #eee;
   flex-wrap:wrap;
 }
-
 .supplier{
   font-weight:700;
   flex:1;
   min-width:125px;
   overflow-wrap:anywhere;
 }
-
 .day{
   color:#b18a00;
-  min-width:100px;
+  min-width:115px;
   font-weight:600;
 }
-
 .amount{
   font-weight:800;
   color:#9a7600;
@@ -111,23 +103,20 @@ body{
   white-space:nowrap;
   background:#fffdf5;
 }
+.actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
 
-.actions{
-  display:flex;
-  gap:7px;
-}
-
-.edit,.del{
+.edit,.del,.received-btn{
   border:0;
   border-radius:10px;
   padding:9px 12px;
   color:white;
   cursor:pointer;
-  font-size:15px;
+  font-size:14px;
 }
-
 .edit{background:#0879dc}
 .del{background:#d32f2f}
+.received-btn{background:#168b40;font-weight:800}
+.received-btn:disabled{opacity:.6;cursor:wait}
 
 .empty{
   text-align:center;
@@ -143,7 +132,6 @@ body{
   font-size:18px;
   font-weight:800;
 }
-
 .total{
   background:linear-gradient(100deg,#f5cf44,#e4ae00);
   color:#222;
@@ -152,7 +140,6 @@ body{
   white-space:nowrap;
   font-size:23px;
 }
-
 .small{
   color:#999;
   font-size:13px;
@@ -173,7 +160,47 @@ body{
 .status.success{background:#eefaf0;color:#217a35}
 .status.info{background:#eef5ff;color:#2162aa}
 
-/* BOTÓN FLOTANTE */
+.order.today{
+  background:#e9f9ed;
+  border:1px solid #a5dfb1;
+  border-radius:14px;
+  padding:14px;
+  margin:8px 0;
+}
+.order.today .supplier{color:#176b32}
+.order.today .day{color:#16813b;font-weight:900}
+.order.today .amount{
+  color:#16813b;
+  border-color:#70c58a;
+  background:#f4fff6;
+}
+
+.today-label{
+  background:#19a34a;
+  color:white;
+  padding:5px 11px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:900;
+}
+.tomorrow-label{
+  background:#fff3cd;
+  color:#967000;
+  padding:5px 11px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:900;
+}
+.received-label{
+  background:#d0f3d9;
+  color:#167536;
+  border:1px solid #9bd8aa;
+  padding:8px 11px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
 
 .fab{
   position:fixed;
@@ -186,20 +213,14 @@ body{
   background:linear-gradient(135deg,#f5cf44,#e4ae00);
   color:#222;
   font-size:36px;
-  font-weight:400;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
   box-shadow:0 6px 22px #c69a0055;
   z-index:100;
-  transition:.2s;
 }
-
 .fab:active{transform:scale(.93)}
-.fab:disabled{opacity:.5;cursor:wait}
-
-/* MODAL */
 
 .modal{
   position:fixed;
@@ -212,36 +233,29 @@ body{
   padding:15px;
   z-index:200;
 }
-
 .modal.active{display:flex}
-
 .modal-box{
   width:100%;
   max-width:450px;
+  max-height:90vh;
+  overflow:auto;
   background:#fff;
   border-radius:24px;
   padding:22px;
   box-shadow:0 15px 50px #00000025;
   animation:appear .2s ease;
 }
-
 @keyframes appear{
   from{transform:translateY(20px);opacity:0}
   to{transform:translateY(0);opacity:1}
 }
-
 .modal-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   margin-bottom:18px;
 }
-
-.modal-header h2{
-  margin:0;
-  font-size:21px;
-}
-
+.modal-header h2{margin:0;font-size:21px}
 .close{
   border:none;
   background:#f0f1f3;
@@ -251,15 +265,12 @@ body{
   font-size:20px;
   cursor:pointer;
 }
-
 .field{margin:13px 0}
-
 .field label{
   display:block;
   font-weight:700;
   margin-bottom:7px;
 }
-
 .field input,.field select{
   width:100%;
   background:#fff;
@@ -270,12 +281,10 @@ body{
   font-size:16px;
   outline:none;
 }
-
 .field input:focus,.field select:focus{
   border-color:var(--gold);
   box-shadow:0 0 0 3px #ffd21f22;
 }
-
 .btn{
   border:0;
   border-radius:14px;
@@ -284,30 +293,18 @@ body{
   font-size:16px;
   cursor:pointer;
 }
-
 .primary{
   background:linear-gradient(100deg,#f5cf44,#e4ae00);
   color:#222;
   width:100%;
   margin-top:8px;
 }
-
 .primary:disabled{opacity:.6;cursor:wait}
 
-.secondary{
-  background:#f0f1f3;
-  color:#333;
-  border:1px solid #ddd;
-}
-
-.day-badge{
-  background:#fff9df;
-  border:1px solid #ecd36a;
-  color:#9b7700;
-  padding:5px 10px;
-  border-radius:20px;
+.date-hint{
   font-size:12px;
-  font-weight:800;
+  color:#888;
+  margin-top:6px;
 }
 
 @media(max-width:520px){
@@ -318,12 +315,7 @@ body{
   .day{flex:1}
   .totalbox{font-size:16px}
   .total{font-size:20px;padding:10px 13px}
-  .fab{
-    right:18px;
-    bottom:20px;
-    width:60px;
-    height:60px;
-  }
+  .fab{right:18px;bottom:20px;width:60px;height:60px}
 }
 </style>
 </head>
@@ -342,7 +334,9 @@ body{
 
   <div class="toolbar">
     <input id="search" placeholder="🔍 Buscar proveedor…">
-    <select id="filterDay"></select>
+    <select id="filterDay">
+      <option value="">Todos los días</option>
+    </select>
   </div>
 
   <div id="orders">
@@ -380,8 +374,11 @@ body{
       </div>
 
       <div class="field">
-        <label for="day">Día de semana</label>
+        <label for="day">Fecha del pedido</label>
         <select id="day" required></select>
+        <div class="date-hint">
+          Los días después del domingo pertenecen a la próxima semana.
+        </div>
       </div>
 
       <div class="field">
@@ -399,18 +396,17 @@ body{
         Guardar pedido
       </button>
     </form>
+
   </div>
 </div>
-
-<!-- SUPABASE -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
-/* =========================================
-   CONFIGURACIÓN DE SUPABASE
-========================================= */
+/* =====================================
+   CONFIGURACIÓN SUPABASE
+===================================== */
 
 const SUPABASE_URL = 'https://igvjtymodcijosjjeyqh.supabase.co';
 
@@ -421,9 +417,9 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-/* =========================================
+/* =====================================
    ELEMENTOS
-========================================= */
+===================================== */
 
 const form = document.getElementById('orderForm');
 const supplier = document.getElementById('supplier');
@@ -441,8 +437,13 @@ const modalTitle = document.getElementById('modalTitle');
 const statusEl = document.getElementById('status');
 
 const allDays = [
-  'Lunes','Martes','Miércoles',
-  'Jueves','Viernes','Sábado','Domingo'
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado'
 ];
 
 let orders = [];
@@ -450,68 +451,216 @@ let saving = false;
 let requestNumber = 0;
 let realtimeChannel = null;
 let refreshTimer = null;
+let statusTimer = null;
 
-/* =========================================
+/* =====================================
+   FECHAS LOCALES
+===================================== */
+
+function localDateKey(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const d = String(date.getDate()).padStart(2,'0');
+
+  return `${y}-${m}-${d}`;
+}
+
+function parseLocalDate(value){
+  if(!value) return null;
+
+  const parts = String(value).slice(0,10).split('-').map(Number);
+
+  if(parts.length !== 3 || parts.some(Number.isNaN)){
+    return null;
+  }
+
+  return new Date(parts[0],parts[1]-1,parts[2]);
+}
+
+function addDays(date,amount){
+  const result = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+
+  result.setDate(result.getDate()+amount);
+
+  return result;
+}
+
+function getToday(){
+  const now = new Date();
+
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+}
+
+function getDateDayName(date){
+  return allDays[date.getDay()];
+}
+
+function formatDate(date){
+  return new Intl.DateTimeFormat('es-DO',{
+    day:'2-digit',
+    month:'short'
+  }).format(date);
+}
+
+function formatLongDate(date){
+  return new Intl.DateTimeFormat('es-DO',{
+    weekday:'long',
+    day:'numeric',
+    month:'long'
+  }).format(date);
+}
+
+/* =====================================
+   CALENDARIO SEMANAL
+===================================== */
+
+/*
+  Muestra desde hoy hasta el domingo
+  de la próxima semana.
+
+  Ejemplo:
+  Viernes, sábado, domingo,
+  lunes de la próxima semana...
+*/
+
+function getCalendarDates(){
+
+  const today = getToday();
+
+  const daysUntilSunday = (7-today.getDay())%7;
+
+  const totalDays = daysUntilSunday+7;
+
+  const dates = [];
+
+  for(let i=0;i<=totalDays;i++){
+    dates.push(addDays(today,i));
+  }
+
+  return dates;
+}
+
+function getWeekGroup(date){
+
+  const today = getToday();
+
+  const firstSunday = addDays(
+    today,
+    (7-today.getDay())%7
+  );
+
+  return date <= firstSunday
+    ? 'ESTA SEMANA'
+    : 'PRÓXIMA SEMANA';
+}
+
+function setupDays(selectedDate=''){
+
+  const dates = getCalendarDates();
+
+  day.innerHTML =
+    '<option value="">Selecciona una fecha</option>';
+
+  filterDay.innerHTML =
+    '<option value="">Todos los días</option>';
+
+  let currentGroup = '';
+
+  dates.forEach(date=>{
+
+    const key = localDateKey(date);
+    const group = getWeekGroup(date);
+
+    if(group !== currentGroup){
+
+      const groupOption = document.createElement('option');
+
+      groupOption.disabled = true;
+      groupOption.textContent = '── '+group+' ──';
+
+      day.appendChild(groupOption);
+
+      currentGroup = group;
+    }
+
+    const dateName = getDateDayName(date);
+
+    let label = `${dateName} ${formatDate(date)}`;
+
+    if(key === localDateKey(getToday())){
+      label = 'HOY · '+label;
+    }else if(key === localDateKey(addDays(getToday(),1))){
+      label = 'MAÑANA · '+label;
+    }
+
+    const option = new Option(label,key);
+
+    day.add(option);
+
+    filterDay.add(
+      new Option(label,key)
+    );
+
+  });
+
+  if(selectedDate){
+
+    const exists = [...day.options].some(
+      option=>option.value === selectedDate
+    );
+
+    if(!exists){
+
+      const date = parseLocalDate(selectedDate);
+
+      if(date){
+
+        day.add(
+          new Option(
+            getDateDayName(date)+' '+formatDate(date),
+            selectedDate
+          )
+        );
+
+      }
+
+    }
+
+    day.value = selectedDate;
+  }
+
+}
+
+/* =====================================
    MENSAJES
-========================================= */
+===================================== */
 
 function showStatus(message,type='info'){
 
   statusEl.textContent = message;
-  statusEl.className = 'status show ' + type;
+  statusEl.className = 'status show '+type;
 
-  if(type === 'success'){
+  clearTimeout(statusTimer);
 
-    setTimeout(()=>{
-      statusEl.className = 'status';
-    },3500);
+  statusTimer = setTimeout(()=>{
 
-  }
-}
+    statusEl.className = 'status';
 
-/* =========================================
-   DÍAS
-========================================= */
-
-function getCurrentDayIndex(){
-
-  const today = new Date().getDay();
-
-  return today === 0 ? 6 : today - 1;
+  },4000);
 
 }
 
-function getRemainingDays(){
-
-  return allDays.slice(getCurrentDayIndex());
-
-}
-
-function setupDays(selectedDay=''){
-
-  const remaining = getRemainingDays();
-
-  day.innerHTML =
-    '<option value="">Selecciona un día</option>' +
-    remaining.map(d=>`<option value="${d}">${d}</option>`).join('');
-
-  if(selectedDay && !remaining.includes(selectedDay)){
-    day.add(new Option(selectedDay,selectedDay));
-  }
-
-  if(selectedDay){
-    day.value = selectedDay;
-  }
-
-  filterDay.innerHTML =
-    '<option value="">Todos los días</option>' +
-    allDays.map(d=>`<option value="${d}">${d}</option>`).join('');
-
-}
-
-/* =========================================
+/* =====================================
    FORMATO
-========================================= */
+===================================== */
 
 const money = n => new Intl.NumberFormat('es-DO',{
   style:'currency',
@@ -531,9 +680,33 @@ function escapeHtml(s){
 
 }
 
-/* =========================================
-   CARGAR PEDIDOS DESDE SUPABASE
-========================================= */
+/* =====================================
+   ETIQUETAS DE FECHAS
+===================================== */
+
+function getDateLabel(date){
+
+  const today = getToday();
+
+  const tomorrow = addDays(today,1);
+
+  if(localDateKey(date) === localDateKey(today)){
+    return '<span class="today-label">HOY</span>';
+  }
+
+  if(localDateKey(date) === localDateKey(tomorrow)){
+    return '<span class="tomorrow-label">MAÑANA</span>';
+  }
+
+  return escapeHtml(
+    getDateDayName(date)+' '+formatDate(date)
+  );
+
+}
+
+/* =====================================
+   CARGAR PEDIDOS
+===================================== */
 
 async function loadOrders(showLoading=false){
 
@@ -549,6 +722,7 @@ async function loadOrders(showLoading=false){
   const {data,error} = await supabaseClient
     .from('pedidos')
     .select('*')
+    .order('fecha_pedido',{ascending:true})
     .order('created_at',{ascending:false});
 
   if(currentRequest !== requestNumber)return;
@@ -570,7 +744,6 @@ async function loadOrders(showLoading=false){
     );
 
     return;
-
   }
 
   orders = data || [];
@@ -579,9 +752,9 @@ async function loadOrders(showLoading=false){
 
 }
 
-/* =========================================
+/* =====================================
    ACTUALIZACIÓN EN TIEMPO REAL
-========================================= */
+===================================== */
 
 function subscribeToOrders(){
 
@@ -597,41 +770,26 @@ function subscribeToOrders(){
         schema:'public',
         table:'pedidos'
       },
-      (payload)=>{
+      payload=>{
 
         console.log('Cambio detectado:',payload);
 
         clearTimeout(refreshTimer);
 
-        refreshTimer = setTimeout(async ()=>{
+        refreshTimer = setTimeout(async()=>{
 
           await loadOrders();
 
           if(payload.eventType === 'INSERT'){
-
-            showStatus(
-              'Nuevo pedido recibido automáticamente ☁️',
-              'success'
-            );
-
+            showStatus('Nuevo pedido recibido automáticamente ☁️','success');
           }
 
           if(payload.eventType === 'UPDATE'){
-
-            showStatus(
-              'Pedido actualizado automáticamente ☁️',
-              'success'
-            );
-
+            showStatus('Pedido actualizado automáticamente ☁️','success');
           }
 
           if(payload.eventType === 'DELETE'){
-
-            showStatus(
-              'Pedido eliminado automáticamente ☁️',
-              'success'
-            );
-
+            showStatus('Pedido eliminado automáticamente ☁️','success');
           }
 
         },250);
@@ -651,91 +809,143 @@ function subscribeToOrders(){
 
       }
 
-      if(status === 'CHANNEL_ERROR' ||
-         status === 'TIMED_OUT'){
-
+      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         console.error('Problema con Realtime:',error);
-
-        // Se mantiene la reconexión sin mostrar el mensaje en pantalla.
-
-      }
-
-      if(status === 'CLOSED'){
-
-        console.log('Canal Realtime cerrado.');
-
       }
 
     });
 
 }
 
-/* =========================================
+/* =====================================
    MOSTRAR PEDIDOS
-========================================= */
+===================================== */
 
 function render(){
 
   const q = search.value.trim().toLowerCase();
-  const d = filterDay.value;
+  const selectedDate = filterDay.value;
 
-  const filtered = orders.filter(o =>
-    String(o.proveedor || '').toLowerCase().includes(q) &&
-    (!d || o.dia === d)
-  );
+  const todayKey = localDateKey(getToday());
 
-  ordersEl.innerHTML = filtered.length
+  const filtered = orders.filter(o=>{
 
-    ? filtered.map(o=>`
+    const matchesSupplier =
+      String(o.proveedor || '').toLowerCase().includes(q);
 
-      <div class="order">
+    const matchesDate =
+      !selectedDate ||
+      String(o.fecha_pedido).slice(0,10) === selectedDate;
 
-        <div class="supplier">
-          👥 ${escapeHtml(o.proveedor)}
+    return matchesSupplier && matchesDate;
+
+  });
+
+  const groups = new Map();
+
+  filtered.forEach(o=>{
+
+    const dateKey = String(o.fecha_pedido).slice(0,10);
+
+    if(!groups.has(dateKey)){
+      groups.set(dateKey,[]);
+    }
+
+    groups.get(dateKey).push(o);
+
+  });
+
+  if(filtered.length){
+
+    let html = '';
+
+    groups.forEach((items,dateKey)=>{
+
+      const date = parseLocalDate(dateKey);
+
+      const group = getWeekGroup(date);
+
+      html += `
+        <div class="week-heading">
+          ${group} · ${escapeHtml(formatLongDate(date))}
         </div>
+      `;
 
-        <div class="day">
-          ▦ ${escapeHtml(o.dia)}
-        </div>
+      items.forEach(o=>{
 
-        <div class="amount">
-          ${money(o.monto)}
-        </div>
+        const isToday = dateKey === todayKey;
+        const received = o.recibido === true;
 
-        <div class="actions">
+        html += `
 
-          <button class="edit"
-            data-edit="${o.id}"
-            aria-label="Editar">✎</button>
+          <div class="order ${isToday?'today':''}">
 
-          <button class="del"
-            data-del="${o.id}"
-            aria-label="Eliminar">🗑</button>
+            <div class="supplier">
+              👥 ${escapeHtml(o.proveedor)}
+            </div>
 
-        </div>
+            <div class="day">
+              ${getDateLabel(date)}
+            </div>
 
-      </div>
+            <div class="amount">
+              ${money(o.monto)}
+            </div>
 
-    `).join('')
+            <div class="actions">
 
-    :`
+              ${isToday ? (
+
+                received
+
+                ? '<span class="received-label">✓ RECIBIDO</span>'
+
+                : `<button class="received-btn"
+                    data-received="${escapeHtml(o.id)}">
+                    ✓ RECIBIDO
+                  </button>`
+
+              ) : ''}
+
+              <button class="edit"
+                data-edit="${escapeHtml(o.id)}"
+                aria-label="Editar">✎</button>
+
+              <button class="del"
+                data-del="${escapeHtml(o.id)}"
+                aria-label="Eliminar">🗑</button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      });
+
+    });
+
+    ordersEl.innerHTML = html;
+
+  }else{
+
+    ordersEl.innerHTML = `
 
       <div class="empty">
 
         ${orders.length
-
           ? 'No hay pedidos que coincidan.'
-
-          : 'Todavía no tienes pedidos guardados. Pulsa el botón + para agregar tu primer pedido.'
-
+          : 'Todavía no tienes pedidos guardados. Pulsa + para agregar tu primer pedido.'
         }
 
       </div>
 
     `;
 
+  }
+
   const total = orders.reduce(
-    (s,o)=>s+Number(o.monto || 0),0
+    (sum,o)=>sum+Number(o.monto || 0),0
   );
 
   document.getElementById('grandTotal').textContent =
@@ -743,9 +953,9 @@ function render(){
 
 }
 
-/* =========================================
+/* =====================================
    MODAL
-========================================= */
+===================================== */
 
 function openModal(){
 
@@ -787,9 +997,9 @@ document.addEventListener('keydown',e=>{
 
 });
 
-/* =========================================
-   GUARDAR Y ACTUALIZAR PEDIDOS
-========================================= */
+/* =====================================
+   GUARDAR Y ACTUALIZAR
+===================================== */
 
 form.addEventListener('submit',async e=>{
 
@@ -799,21 +1009,21 @@ form.addEventListener('submit',async e=>{
 
   const proveedor = supplier.value.trim();
 
-  const diaSeleccionado = day.value;
+  const fechaSeleccionada = day.value;
+
+  const fecha = parseLocalDate(fechaSeleccionada);
 
   const monto = Number(amount.value);
 
   if(
     !proveedor ||
-    !diaSeleccionado ||
+    !fechaSeleccionada ||
+    !fecha ||
     !Number.isFinite(monto) ||
     monto < 0
   ){
 
-    showStatus(
-      'Verifica los datos del pedido.',
-      'error'
-    );
+    showStatus('Verifica los datos del pedido.','error');
 
     return;
 
@@ -825,13 +1035,16 @@ form.addEventListener('submit',async e=>{
 
   const isEditing = Boolean(editId.value);
 
+  const currentId = editId.value;
+
   saveBtn.textContent = isEditing
     ? 'Actualizando...'
     : 'Guardando...';
 
   const entry = {
     proveedor,
-    dia:diaSeleccionado,
+    fecha_pedido:fechaSeleccionada,
+    dia:getDateDayName(fecha),
     monto
   };
 
@@ -844,13 +1057,15 @@ form.addEventListener('submit',async e=>{
       result = await supabaseClient
         .from('pedidos')
         .update(entry)
-        .eq('id',editId.value);
+        .eq('id',currentId)
+        .select('id');
 
     }else{
 
       result = await supabaseClient
         .from('pedidos')
-        .insert([entry]);
+        .insert([entry])
+        .select('id');
 
     }
 
@@ -867,7 +1082,22 @@ form.addEventListener('submit',async e=>{
 
     }
 
+    if(!result.data || result.data.length === 0){
+
+      showStatus(
+        'No se pudo guardar. Revisa los permisos de Supabase.',
+        'error'
+      );
+
+      return;
+
+    }
+
     closeModal();
+
+    form.reset();
+
+    editId.value = '';
 
     await loadOrders();
 
@@ -877,10 +1107,6 @@ form.addEventListener('submit',async e=>{
         : 'Pedido guardado correctamente ☁️',
       'success'
     );
-
-    form.reset();
-
-    editId.value = '';
 
   }catch(error){
 
@@ -905,15 +1131,90 @@ form.addEventListener('submit',async e=>{
 
 });
 
-/* =========================================
-   EDITAR Y ELIMINAR
-========================================= */
+/* =====================================
+   EDITAR, ELIMINAR Y RECIBIDO
+===================================== */
 
 ordersEl.addEventListener('click',async e=>{
 
   const editButton = e.target.closest('[data-edit]');
-
   const deleteButton = e.target.closest('[data-del]');
+  const receivedButton = e.target.closest('[data-received]');
+
+  /* MARCAR RECIBIDO */
+
+  if(receivedButton){
+
+    const id = receivedButton.dataset.received;
+
+    if(!confirm('¿Confirmas que este pedido fue recibido?')){
+      return;
+    }
+
+    receivedButton.disabled = true;
+    receivedButton.textContent = 'Guardando...';
+
+    try{
+
+      const {data,error} = await supabaseClient
+        .from('pedidos')
+        .update({recibido:true})
+        .eq('id',id)
+        .select('id');
+
+      if(error){
+
+        console.error(error);
+
+        showStatus(
+          'No se pudo marcar como recibido: '+error.message,
+          'error'
+        );
+
+        receivedButton.disabled = false;
+        receivedButton.textContent = '✓ RECIBIDO';
+
+        return;
+      }
+
+      if(!data || data.length === 0){
+
+        showStatus(
+          'No se pudo actualizar. Revisa los permisos de Supabase.',
+          'error'
+        );
+
+        receivedButton.disabled = false;
+        receivedButton.textContent = '✓ RECIBIDO';
+
+        return;
+      }
+
+      await loadOrders();
+
+      showStatus(
+        '¡Pedido marcado como recibido correctamente! ✓',
+        'success'
+      );
+
+    }catch(error){
+
+      console.error(error);
+
+      showStatus(
+        'Error de conexión al marcar como recibido.',
+        'error'
+      );
+
+      receivedButton.disabled = false;
+      receivedButton.textContent = '✓ RECIBIDO';
+
+    }
+
+    return;
+  }
+
+  /* EDITAR */
 
   if(editButton){
 
@@ -929,9 +1230,13 @@ ordersEl.addEventListener('click',async e=>{
 
     supplier.value = o.proveedor;
 
-    setupDays(o.dia);
+    const existingDate = String(
+      o.fecha_pedido || ''
+    ).slice(0,10);
 
-    day.value = o.dia;
+    setupDays(existingDate);
+
+    day.value = existingDate;
 
     amount.value = o.monto;
 
@@ -945,11 +1250,15 @@ ordersEl.addEventListener('click',async e=>{
 
   }
 
+  /* ELIMINAR */
+
   if(deleteButton){
 
     const id = deleteButton.dataset.del;
 
-    if(!confirm('¿Eliminar este pedido permanentemente?'))return;
+    if(!confirm('¿Eliminar este pedido permanentemente?')){
+      return;
+    }
 
     deleteButton.disabled = true;
 
@@ -972,7 +1281,6 @@ ordersEl.addEventListener('click',async e=>{
         deleteButton.disabled = false;
 
         return;
-
       }
 
       await loadOrders();
@@ -999,17 +1307,17 @@ ordersEl.addEventListener('click',async e=>{
 
 });
 
-/* =========================================
+/* =====================================
    BUSCAR Y FILTRAR
-========================================= */
+===================================== */
 
 search.addEventListener('input',render);
 
 filterDay.addEventListener('change',render);
 
-/* =========================================
-   SINCRONIZACIÓN AL VOLVER A LA PÁGINA
-========================================= */
+/* =====================================
+   SINCRONIZACIÓN
+===================================== */
 
 window.addEventListener('online',()=>{
 
@@ -1031,16 +1339,26 @@ window.addEventListener('focus',()=>{
 document.addEventListener('visibilitychange',()=>{
 
   if(!document.hidden){
-
     loadOrders();
-
   }
 
 });
 
-/* =========================================
+/* =====================================
+   CAMBIO DE DÍA AUTOMÁTICO
+===================================== */
+
+function refreshCalendar(){
+
+  setupDays();
+
+  render();
+
+}
+
+/* =====================================
    INICIAR APLICACIÓN
-========================================= */
+===================================== */
 
 setupDays();
 
